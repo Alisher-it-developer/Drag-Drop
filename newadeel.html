@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Person Data Fields</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7fc;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    /* Sidebar Styles - WIDER VERSION (350px) */
+    .sidebar {
+      flex: 0 0 350px;
+      max-width: 300px;
+      height: calc(100vh - 40px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 10px;
+      scrollbar-width: thin;
+      scrollbar-color: #00aaff #f4f7fc;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: #f4f7fc;
+      border-radius: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: #00aaff;
+      border-radius: 3px;
+    }
+
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      height: calc(100vh - 40px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Panel Styles */
+    .section-panel,
+    .layout-panel,
+    .field-panel {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      width: 100%;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      margin-bottom: 10px;
+    }
+
+    .field-panel-header {
+      font-size: 16px;
+      margin-bottom: 10px;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .field-panel strong {
+      color: #0078d4;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+    }
+
+    .field-button {
+      background-color: #00aaff;
+      color: white;
+      border: none;
+      padding: 10px 8px;
+      cursor: move;
+      font-size: 13px;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+
+    .field-button:hover {
+      background-color: #008bb5;
+    }
+
+    /* .field-button:active {
+      cursor: grabbing;
+    } */
+
+    .field-button.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background-color: #cccccc;
+      pointer-events: none;
+    }
+
+    .field-button.disabled:hover {
+      background-color: #cccccc;
+    }
+
+    .layout-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .layout-row {
+      display: flex;
+      height: 40px;
+    }
+
+    .layout-preview {
+      cursor: move;
+      user-select: none;
+      width: 100%;
+      display: flex;
+      gap: 3px;
+      padding: 3px;
+    }
+
+    .preview-cell {
+      background-color: rgba(7, 197, 255, 0.918);
+      border-radius: 2px;
+      flex: 1;
+    }
+
+    /* Grid Container Styles */
+    .grid-container {
+      width: 100%;
+      margin: 10px 0;
+      /* Adjusted margin for better spacing */
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .grid-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+      min-height: 40px;
+      background: transparent;
+      width: 100%;
+      /* Ensure full width */
+    }
+
+    .grid-col {
+      flex: 1;
+      background: transparent;
+      border: 2px dashed gray;
+      padding: 15px;
+      min-width: 0;
+      overflow: auto;
+      scrollbar-width: thin;
+    }
+
+    .grid-col.col-2 {
+      flex: 2;
+    }
+
+    .grid-col.col-3 {
+      flex: 3;
+    }
+
+    /* Form Field Styles */
+    .form-field {
+      margin-bottom: 10px;
+    }
+
+    .form-field label {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    .form-field input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid rgba(7, 197, 255, 0.2);
+      border-radius: 4px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .form-field input:focus {
+      border-color: rgba(7, 197, 255, 0.8);
+    }
+
+    /* Dropzone Styles */
+    .dropzone {
+      flex: 1;
+      min-height: 100px;
+      /* Ensure a reasonable height */
+      background: white;
+      border-radius: 8px;
+      border: 1px solid rgba(7, 197, 255, 0.2);
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #00aaff #f4f7fc;
+      position: relative;
+      align-items: center;/
+    }
+
+    .dropzone::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .dropzone::-webkit-scrollbar-track {
+      background: #f4f7fc;
+      border-radius: 3px;
+    }
+
+    .dropzone::-webkit-scrollbar-thumb {
+      background: #00aaff;
+      border-radius: 3px;
+    }
+
+    .dropzone-text {
+      color: #666;
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .dropzone.active {
+      border-color: rgba(7, 197, 255, 0.8);
+    }
+
+    /* Dropzone Tab Styles */
+    .tabs-container {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 20px;
+      min-height: 40px;
+      background: #f5f5f5;
+      padding: 5px;
+      border-radius: 4px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      margin-right: 122px;
+    }
+
+    .tab {
+      background: #00aaff;
+      color: white;
+      padding: 6px 8px;
+      border-radius: 4px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      transform-origin: center;
+      cursor: pointer;
+    }
+
+    .tab.dragging {
+      opacity: 0.5;
+      transform: scale(1.05);
+      z-index: 100;
+    }
+
+    .tab.slide-left {
+      animation: slideLeft 0.3s ease forwards;
+    }
+
+    .tab.slide-right {
+      animation: slideRight 0.3s ease forwards;
+    }
+
+    @keyframes slideLeft {
+      0% {
+        transform: translateX(0);
+      }
+
+      50% {
+        transform: translateX(-5px);
+      }
+
+      100% {
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideRight {
+      0% {
+        transform: translateX(0);
+      }
+
+      50% {
+        transform: translateX(5px);
+      }
+
+      100% {
+        transform: translateX(0);
+      }
+    }
+
+    .tab-label {
+      min-width: 60px;
+      outline: none;
+      padding: 2px 4px;
+    }
+
+    .tab-label:focus {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+    }
+
+    .tab-actions {
+      display: flex;
+      gap: 8px;
+      margin-left: 10px;
+    }
+
+    .tab-action {
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .tab-action:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .tab-move {
+      cursor: move;
+    }
+
+    .tab.active {
+      background: #0088cc;
+    }
+
+    .tab-dropzone {
+      width: 100%;
+      min-height: 110px;
+      background: #ffffff;
+      border: 1px solid rgba(7, 197, 255, 0.2);
+      border-radius: 4px;
+      padding: 20px;
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tab-dropzone.active {
+      border-color: rgba(7, 197, 255, 0.8);
+    }
+
+    /* Fieldset Styles */
+    .fieldset-container {
+      border: 4px solid #00aaff;
+      border-radius: 4px;
+      padding: 20px;
+      margin-top: 20px;
+      position: relative;
+    }
+
+    /* Section Panel Styles */
+    .section-header {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .section-item {
+      margin-bottom: 20px;
+    }
+
+    .section-item-label {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .section-preview {
+      cursor: move;
+    }
+
+    /* .section-preview:hover {
+      border-color: rgba(7, 197, 255, 0.4);
+      background: white;
+    } */
+
+    /* Tab Preview Structure */
+    .tab-preview {
+      position: relative;
+      height: 80px;
+    }
+
+    .tab-preview-container {
+      position: absolute;
+      top: 0;
+      left: 9px;
+      right: 0;
+      display: flex;
+      gap: 3px;
+    }
+
+    .mini-tab {
+      background: #00aaff;
+      width: 20px;
+      height: 20px;
+      border-radius: 3px 3px 0 0;
+    }
+
+    .tab-preview-content {
+      height: 60px;
+      width: 96%;
+      position: absolute;
+      top: 20px;
+      left: 0;
+      border: 2px solid #00aaff;
+      border-radius: 4px;
+      background: rgba(7, 197, 255, 0.05);
+    }
+
+    /* Fieldset Preview Structure */
+    .fieldset-preview {
+      position: relative;
+      height: 80px;
+    }
+
+    .mini-fieldset {
+      position: absolute;
+      top: 6px;
+      left: 25%;
+      transform: translateX(-50%);
+      background: #00aaff;
+      width: 90px;
+      height: 25px;
+      border-radius: 12px;
+      z-index: 2;
+    }
+
+    .fieldset-preview-content {
+      height: 60px;
+      position: absolute;
+      top: 16px;
+      left: 0;
+      right: 0;
+      border: 2px solid #00aaff;
+      border-radius: 4px;
+      background: rgba(7, 197, 255, 0.05);
+      width: 96%;
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        height: auto;
+        overflow: auto;
+      }
+
+      .sidebar {
+        flex: none;
+        max-width: none;
+        width: 100%;
+        height: auto;
+        max-height: 40vh;
+      }
+
+      .main-content {
+        height: 60vh;
+      }
+    }
+
+    .grid-col {
+      position: relative;
+    }
+
+
+    .column-icons {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      transform: translateY(-50%);
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 10px;
+    }
+
+    .column-icons .left-icons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .column-icons .center-icons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .column-icons .right-icons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .column-icons i:hover {
+      color: #005a9e;
+      transform: scale(1.2);
+    }
+
+    .grid-col:hover .column-icons {
+      display: flex;
+    }
+
+    .add-column-button {
+      transition: all 0.3s ease;
+    }
+
+
+
+    .add-column-button:hover {
+      background-color: rgba(7, 197, 255, 0.1);
+      border-color: rgba(7, 197, 255, 1);
+    }
+
+    .add-column-button:hover i {
+      transform: scale(1.2);
+    }
+
+    .delete-column {
+      cursor: pointer;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 15px;
+    }
+
+    .form-field input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid rgba(7, 197, 255, 0.5);
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-field input:focus {
+      border-color: rgba(7, 197, 255, 0.8);
+      outline: none;
+    }
+
+    .grid-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+    }
+
+    .field-panel-header {
+      font-size: 16px;
+
+    }
+
+    .add-tab-dropzone {
+      position: absolute;
+      top: 23px;
+      right: 19px;
+      width: 120px;
+      height: 42px;
+      background: white;
+      border: 2px dashed rgba(7, 197, 255, 0.8);
+      border-radius: 4px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #666;
+      font-size: 14px;
+      cursor: default;
+      pointer-events: auto;
+      /* Ensure it can receive drag-and-drop events */
+    }
+
+    .add-tab-dropzone.active {
+      border-color: rgba(7, 197, 255, 1);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Section Panel -->
+      <div class="section-panel">
+        <div class="section-header">SECTION</div>
+        <!-- Tab Section -->
+        <div class="section-item">
+          <div class="section-item-label">TAB</div>
+          <div class="section-preview" draggable="true" data-type="tab">
+            <div class="tab-preview">
+              <div class="tab-preview-container">
+                <div class="mini-tab"></div>
+                <div class="mini-tab"></div>
+                <div class="mini-tab"></div>
+              </div>
+              <div class="tab-preview-content"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Fieldset Section -->
+        <div class="section-item">
+          <div class="section-item-label">FIELDSET</div>
+          <div class="section-preview" draggable="true" data-type="fieldset">
+            <div class="fieldset-preview">
+              <div class="mini-fieldset"></div>
+              <div class="fieldset-preview-content"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Layout Panel -->
+      <div class="layout-panel">
+        <div class="field-panel-header">ROW</div>
+        <div class="layout-grid">
+          <!-- Single Row -->
+          <div class="layout-row">
+            <div class="layout-preview" draggable="true" data-layout="1-row">
+              <div class="preview-cell" style="height: 100%;"></div>
+            </div>
+          </div>
+          <!-- Two equal columns -->
+          <div class="layout-row">
+            <div class="layout-preview" draggable="true" data-layout="2-equal">
+              <div class="preview-cell"></div>
+              <div class="preview-cell"></div>
+            </div>
+          </div>
+          <!-- Three equal columns -->
+          <div class="layout-row">
+            <div class="layout-preview" draggable="true" data-layout="3-equal">
+              <div class="preview-cell"></div>
+              <div class="preview-cell"></div>
+              <div class="preview-cell"></div>
+            </div>
+          </div>
+          <!-- Four equal columns -->
+          <div class="layout-row">
+            <div class="layout-preview" draggable="true" data-layout="4-equal">
+              <div class="preview-cell"></div>
+              <div class="preview-cell"></div>
+              <div class="preview-cell"></div>
+              <div class="preview-cell"></div>
+            </div>
+          </div>
+          <!-- 1:2 split -->
+          <div class="layout-row">
+            <div class="layout-preview" draggable="true" data-layout="1-2-split">
+              <div class="preview-cell"></div>
+              <div class="preview-cell" style="flex: 2"></div>
+            </div>
+          </div>
+          <!-- 2:1 split -->
+          <div class="layout-row">
+            <div class="layout-preview" draggable="true" data-layout="2-1-split">
+              <div class="preview-cell" style="flex: 2"></div>
+              <div class="preview-cell"></div>
+            </div>
+          </div>
+          <!-- 5 Equal Columns -->
+          <div class="layout-row">
+            <div class="layout-preview" draggable="true" data-layout="5-equal">
+              <div class="preview-cell"></div>
+              <div class="preview-cell"></div>
+              <div class="preview-cell"></div>
+              <div class="preview-cell"></div>
+              <div class="preview-cell"></div>
+            </div>
+          </div>
+          <!-- 2-8-2 Split Columns -->
+          <div class="layout-row">
+            <div class="layout-preview" draggable="true" data-layout="2-8-2-split">
+              <div class="preview-cell" style="flex: 2"></div>
+              <div class="preview-cell" style="flex: 8"></div>
+              <div class="preview-cell" style="flex: 2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Field Panel -->
+      <div class="field-panel">
+        <div class="field-panel-header">Data Table: PERSON</div>
+        <h5>Data Fields</h5>
+        <div class="field-grid">
+          <div class="field-button" draggable="true" data-type="title">Title</div>
+          <div class="field-button" draggable="true" data-type="firstname">First Name</div>
+          <div class="field-button" draggable="true" data-type="lastname">Last Name</div>
+          <div class="field-button" draggable="true" data-type="address1">Address Line 1</div>
+          <div class="field-button" draggable="true" data-type="address2">Address Line 2</div>
+          <div class="field-button" draggable="true" data-type="suburb">Suburb</div>
+          <div class="field-button" draggable="true" data-type="state">State</div>
+          <div class="field-button" draggable="true" data-type="postcode">Postcode</div>
+          <div class="field-button" draggable="true" data-type="country">Country</div>
+          <div class="field-button" draggable="true" data-type="email">Email</div>
+          <div class="field-button" draggable="true" data-type="url">URL</div>
+          <div class="field-button" draggable="true" data-type="photo">Photo</div>
+        </div>
+      </div>
+    </div>
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Dropzone -->
+      <div class="dropzone" id="dropzone">
+        <div class="dropzone-text" id="dropzone-text">Drop a Tab</div>
+      </div>
+    </div>
+  </div>
+  <div id="formContainer" style="display: none;"></div>
+
+  <script>
+    // Set up dragging for layout buttons
+    document.querySelectorAll('.layout-preview').forEach(button => {
+      button.addEventListener('dragstart', function (e) {
+        e.dataTransfer.setData('layout', this.dataset.layout);
+        e.dataTransfer.setData('type', 'layout');
+      });
+    });
+
+    // Set up dragging for field buttons
+    document.querySelectorAll('.field-button').forEach(button => {
+      button.addEventListener('dragstart', function (e) {
+        if (this.classList.contains('disabled')) {
+          e.preventDefault();
+          return;
+        }
+        e.dataTransfer.setData('type', 'field');
+        e.dataTransfer.setData('fieldType', this.dataset.type);
+        e.dataTransfer.setData('label', this.innerText);
+        e.dataTransfer.setData('buttonId', this.id);
+      });
+    });
+
+    // Ensure each field button has a unique ID
+    document.querySelectorAll('.field-button').forEach((button, index) => {
+      button.id = 'field-' + button.dataset.type;
+    });
+
+    document.querySelectorAll('.grid-col, .grid-row').forEach((element) => {
+      element.addEventListener('dragover', (e) => {
+        e.preventDefault();
+      });
+    });
+
+    // Tab Counter
+    let tabCounter = 1;
+
+    // Tab dragging variables
+    let draggedTab = null;
+    let tabDragStartX = 0;
+    let tabDragStartY = 0;
+
+    // Set up dragging for section previews
+    document.querySelectorAll('.section-preview').forEach(preview => {
+      preview.addEventListener('dragstart', function (e) {
+        e.dataTransfer.setData('type', this.dataset.type);
+      });
+    });
+
+    function createTab() {
+      const tabId = `tab-${tabCounter}`;
+      const tab = document.createElement('div');
+      tab.className = 'tab';
+      tab.draggable = true;
+      tab.dataset.tabId = tabId;
+
+      const label = document.createElement('span');
+      label.className = 'tab-label';
+      label.contentEditable = true;
+      label.textContent = `Tab ${tabCounter++}`;
+
+      const actions = document.createElement('div');
+      actions.className = 'tab-actions';
+
+      const moveBtn = document.createElement('span');
+      moveBtn.className = 'tab-action tab-move';
+      moveBtn.innerHTML = '<i class="fas fa-arrows-alt"></i>';
+
+      const deleteBtn = document.createElement('span');
+      deleteBtn.className = 'tab-action tab-delete';
+      deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        const content = document.getElementById(tabId + '-content');
+        if (content) content.remove();
+        tab.remove();
+        const firstTab = document.querySelector('.tab');
+        if (firstTab) {
+          activateTab(firstTab);
+        } else {
+          // If no tabs remain, remove the tabs-container and add-tab-dropzone, and show the initial dropzone text
+          const tabsContainer = document.getElementById('tabs-container');
+          if (tabsContainer) tabsContainer.remove();
+          const addTabDropzone = document.getElementById('add-tab-dropzone');
+          if (addTabDropzone) addTabDropzone.remove();
+          document.getElementById('dropzone-text').textContent = 'Drop a Tab';
+          document.getElementById('dropzone-text').style.display = 'block';
+        }
+      };
+
+      actions.appendChild(moveBtn);
+      actions.appendChild(deleteBtn);
+      tab.appendChild(label);
+      tab.appendChild(actions);
+
+      // Create corresponding tab content
+      const tabContent = document.createElement('div');
+      tabContent.id = tabId + '-content';
+      tabContent.className = 'tab-dropzone';
+      tabContent.style.display = 'none';
+
+      // Add "Drop a Row" placeholder
+      const rowPlaceholder = document.createElement('div');
+      rowPlaceholder.className = 'row-placeholder';
+      rowPlaceholder.textContent = 'Drop a Row';
+      rowPlaceholder.style.border = '3px dashed rgba(7, 197, 255, 0.8)';
+      rowPlaceholder.style.padding = '20px';
+      rowPlaceholder.style.textAlign = 'center';
+      rowPlaceholder.style.color = '#666';
+      rowPlaceholder.style.marginBottom = '10px';
+
+      // Add drag and drop functionality to the placeholder
+      rowPlaceholder.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        rowPlaceholder.classList.add('active');
+      });
+
+      rowPlaceholder.addEventListener('dragleave', () => {
+        rowPlaceholder.classList.remove('active');
+      });
+
+      rowPlaceholder.addEventListener('drop', (e) => {
+        e.preventDefault();
+        rowPlaceholder.classList.remove('active');
+
+        const type = e.dataTransfer.getData('type');
+        const layout = e.dataTransfer.getData('layout');
+
+        if (type === 'layout' && layout) {
+          createGridLayout(layout, tabContent);
+          tabContent.appendChild(rowPlaceholder);
+        } else {
+          alert('Please drop a valid row layout.');
+        }
+      });
+
+      tabContent.appendChild(rowPlaceholder);
+
+      // Append tab content to the dropzone
+      const dropzone = document.getElementById('dropzone');
+      dropzone.appendChild(tabContent);
+
+      // Add click event to make tab active
+      tab.addEventListener('click', () => {
+        activateTab(tab);
+      });
+
+      // Add drag events for tab reordering
+      tab.addEventListener('dragstart', (e) => {
+        draggedTab = tab;
+        tabDragStartX = e.clientX;
+        tabDragStartY = e.clientY;
+        setTimeout(() => {
+          tab.classList.add('dragging');
+        }, 0);
+      });
+
+      tab.addEventListener('dragend', () => {
+        tab.classList.remove('dragging');
+        draggedTab = null;
+      });
+
+      return tab;
+    }
+
+    function activateTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      document.querySelectorAll('.tab-dropzone').forEach(content => {
+        content.style.display = 'none';
+      });
+
+      const tabId = tab.dataset.tabId;
+      const tabContent = document.getElementById(tabId + '-content');
+      if (tabContent) {
+        tabContent.style.display = 'block';
+      }
+
+      // Hide the dropzone text when a tab is active
+      document.getElementById('dropzone-text').style.display = 'none';
+    }
+
+    function createFieldset() {
+      const fieldsetContainer = document.createElement('div');
+      fieldsetContainer.className = 'fieldset-container';
+      fieldsetContainer.style.border = '4px solid #00aaff';
+      fieldsetContainer.style.borderRadius = '4px';
+      fieldsetContainer.style.padding = '20px';
+      fieldsetContainer.style.marginTop = '20px';
+      fieldsetContainer.style.position = 'relative';
+
+      // Add fieldset name display
+      const fieldsetNameContainer = document.createElement('div');
+      fieldsetNameContainer.className = 'fieldset-name-container';
+      fieldsetNameContainer.style.display = 'flex';
+      fieldsetNameContainer.style.alignItems = 'center';
+      fieldsetNameContainer.style.justifyContent = 'space-between';
+      fieldsetNameContainer.style.marginBottom = '10px';
+
+      const fieldsetName = document.createElement('div');
+      fieldsetName.className = 'fieldset-name';
+      fieldsetName.textContent = 'Fieldset Name'; // Default name
+      fieldsetName.style.fontWeight = 'bold';
+
+      // Add fieldset controls (delete, settings)
+      const controls = document.createElement('div');
+      controls.className = 'fieldset-controls';
+      controls.style.display = 'flex';
+      controls.style.gap = '5px';
+
+      // Delete button
+      const deleteBtn = document.createElement('button');
+      deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+      deleteBtn.style.background = 'none';
+      deleteBtn.style.border = 'none';
+      deleteBtn.style.color = '#ff4d4d';
+      deleteBtn.style.cursor = 'pointer';
+      deleteBtn.style.fontSize = '16px';
+      deleteBtn.onclick = () => fieldsetContainer.remove();
+
+      // Settings button
+      const settingsBtn = document.createElement('button');
+      settingsBtn.innerHTML = '<i class="fas fa-cog"></i>';
+      settingsBtn.style.background = 'none';
+      settingsBtn.style.border = 'none';
+      settingsBtn.style.color = '#00aaff';
+      settingsBtn.style.cursor = 'pointer';
+      settingsBtn.style.fontSize = '16px';
+      settingsBtn.onclick = () => openFieldsetSettings(fieldsetContainer, fieldsetName);
+
+      controls.appendChild(settingsBtn);
+      controls.appendChild(deleteBtn);
+      fieldsetNameContainer.appendChild(fieldsetName);
+      fieldsetNameContainer.appendChild(controls);
+      fieldsetContainer.appendChild(fieldsetNameContainer);
+
+      // Add inner drop zone
+      const innerDropzone = document.createElement('div');
+      innerDropzone.className = 'fieldset-inner-dropzone';
+      innerDropzone.style.minHeight = '100px';
+      innerDropzone.style.background = '#f9f9f9';
+      innerDropzone.style.border = '2px dashed #ccc';
+      innerDropzone.style.borderRadius = '4px';
+      innerDropzone.style.padding = '10px';
+      innerDropzone.style.marginTop = '20px';
+
+      // Add drag-and-drop functionality to the inner drop zone
+      innerDropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        innerDropzone.style.borderColor = '#00aaff';
+      });
+
+      innerDropzone.addEventListener('dragleave', () => {
+        innerDropzone.style.borderColor = '#ccc';
+      });
+
+      innerDropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        innerDropzone.style.borderColor = '#ccc';
+
+        const type = e.dataTransfer.getData('type');
+        if (type === 'field') {
+          const fieldType = e.dataTransfer.getData('fieldType');
+          const fieldLabel = e.dataTransfer.getData('label');
+          addFieldToGrid(innerDropzone, fieldType, fieldLabel);
+        } else {
+          alert('Only fields can be dropped here.');
+        }
+      });
+
+      fieldsetContainer.appendChild(innerDropzone);
+
+      return fieldsetContainer;
+    }
+
+    const dropzone = document.getElementById('dropzone');
+
+    dropzone.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      const activeTabContent = document.querySelector('.tab-dropzone[style*="display: block"]');
+      if (!activeTabContent || !activeTabContent.contains(e.target)) {
+        dropzone.classList.add('active');
+      }
+    });
+
+    dropzone.addEventListener('dragleave', function () {
+      dropzone.classList.remove('active');
+    });
+
+    dropzone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dropzone.classList.remove('active');
+
+      const type = e.dataTransfer.getData('type');
+      console.log('Dropped type:', type); // Debug log
+
+      // Initial state: Only allow dropping a Tab
+      if (!document.getElementById('tabs-container')) {
+        if (type === 'tab') {
+          console.log('Tab dropped successfully'); // Debug log
+          // Create the tabs-container dynamically
+          let tabsContainer = document.createElement('div');
+          tabsContainer.id = 'tabs-container';
+          tabsContainer.className = 'tabs-container';
+          dropzone.insertBefore(tabsContainer, dropzone.firstChild);
+
+          const newTab = createTab();
+          tabsContainer.appendChild(newTab);
+          activateTab(newTab);
+
+          // Hide the initial dropzone text
+          document.getElementById('dropzone-text').style.display = 'none';
+
+          // Create the "Drop a Tab" drop zone in the top-right corner
+          let addTabDropzone = document.createElement('div');
+          addTabDropzone.id = 'add-tab-dropzone';
+          addTabDropzone.className = 'add-tab-dropzone';
+          addTabDropzone.textContent = 'Drop a Tab';
+          dropzone.appendChild(addTabDropzone);
+
+          // Add drag-and-drop functionality to the "Drop a Tab" dropzone
+          addTabDropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            addTabDropzone.classList.add('active');
+          });
+
+          addTabDropzone.addEventListener('dragleave', () => {
+            addTabDropzone.classList.remove('active');
+          });
+
+          addTabDropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            addTabDropzone.classList.remove('active');
+            const dropType = e.dataTransfer.getData('type');
+            console.log('Dropped into Add Tab Dropzone, type:', dropType); // Debug log
+            if (dropType === 'tab') {
+              const tabsContainer = document.getElementById('tabs-container');
+              const newTab = createTab();
+              tabsContainer.appendChild(newTab);
+              activateTab(newTab);
+            } else {
+              alert('Please drop a Tab here.');
+            }
+          });
+        } else {
+          console.log('Invalid drop: Expected a Tab, got:', type); // Debug log
+          alert('Only a Tab can be dropped here initially.');
+        }
+      }
+    });
+
+    function handleDrop(e, target) {
+      e.preventDefault();
+
+      const type = e.dataTransfer.getData('type');
+
+      // Ensure the drop target is a valid grid column or row drop zone
+      const dropTarget = e.target.closest('.grid-col') || e.target.closest('.grid-row');
+      if (!dropTarget) {
+        alert('You can only drop fields inside a valid grid column or row.');
+        return;
+      }
+
+      if (type === 'field') {
+        const fieldType = e.dataTransfer.getData('fieldType');
+        const fieldLabel = e.dataTransfer.getData('label');
+        addFieldToGrid(dropTarget, fieldType, fieldLabel);
+      } else if (type === 'layout') {
+        const layout = e.dataTransfer.getData('layout');
+        createGridLayout(layout, dropTarget);
+      } else if (type === 'fieldset') {
+        const fieldset = createFieldset();
+        dropTarget.appendChild(fieldset);
+      }
+    }
+
+    // functionio to add input in grid
+    function addFieldToGrid(target, fieldType, fieldLabel) {
+      const formField = document.createElement('div');
+      formField.classList.add('form-field');
+
+      const label = document.createElement('label');
+      label.textContent = fieldLabel;
+      label.style.fontSize = '14px';
+      label.style.color = '#333';
+      label.style.marginBottom = '5px';
+      label.style.display = 'block';
+
+      const input = document.createElement('input');
+      input.type = fieldType === 'email' ? 'email' : 'text';
+      input.placeholder = `Enter ${fieldLabel}`;
+      input.style.width = '100%';
+      input.style.padding = '10px';
+      input.style.border = '1px solid rgba(7, 197, 255, 0.5)';
+      input.style.borderRadius = '4px';
+      input.style.fontSize = '14px';
+      input.style.boxSizing = 'border-box';
+
+      // Add hover and focus effects
+      input.addEventListener('focus', () => {
+        input.style.borderColor = 'rgba(7, 197, 255, 0.8)';
+        input.style.outline = 'none';
+      });
+
+      input.addEventListener('blur', () => {
+        input.style.borderColor = 'rgba(7, 197, 255, 0.5)';
+      });
+
+      formField.appendChild(label);
+      formField.appendChild(input);
+
+      target.appendChild(formField);
+    }
+
+    // Helper function to normalize flex values to sum to 12 grid units
+    function normalizeRowFlex(row) {
+      const columns = row.querySelectorAll('.grid-col');
+      const addButton = row.querySelector('.add-column-button');
+
+      // Calculate the total current flex units
+      let totalFlex = 0;
+      columns.forEach(col => {
+        const flex = parseFloat(col.dataset.flex || col.style.flex || '0');
+        totalFlex += flex;
+      });
+      if (addButton) {
+        const flex = parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
+        totalFlex += flex;
+      }
+
+      console.log('Total flex before normalization:', totalFlex); // Debug log
+
+      if (totalFlex === 0) return; // Avoid division by zero
+
+      // Normalize to 12 grid units
+      const scaleFactor = 12 / totalFlex;
+      columns.forEach(col => {
+        const currentFlex = parseFloat(col.dataset.flex || col.style.flex || '0');
+        const newFlex = currentFlex * scaleFactor;
+        col.style.flex = newFlex.toFixed(2); // Round to avoid floating-point issues
+        col.dataset.flex = newFlex.toFixed(2);
+      });
+      if (addButton) {
+        const currentFlex = parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
+        const newFlex = currentFlex * scaleFactor;
+        addButton.style.flex = newFlex.toFixed(2);
+        addButton.dataset.flex = newFlex.toFixed(2);
+      }
+
+      // Double-check the total after normalization
+      let totalAfter = 0;
+      columns.forEach(col => {
+        totalAfter += parseFloat(col.dataset.flex || col.style.flex || '0');
+      });
+      if (addButton) {
+        totalAfter += parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
+      }
+      console.log('Total flex after normalization:', totalAfter); // Debug log
+    }
+
+
+    function createColumn(className = '', flexValue = 1) {
+      const col = document.createElement('div');
+      col.className = `grid-col ${className}`;
+      col.style.border = '2px dashed gray';
+      col.style.minHeight = '40px';
+      col.style.flex = flexValue.toString();
+      col.dataset.flex = flexValue.toString();
+      col.id = `col-${Date.now()}`;
+      col.draggable = true;
+
+      const iconsContainer = document.createElement('div');
+      iconsContainer.className = 'column-icons';
+      iconsContainer.innerHTML = `
+    <div class="left-icons">
+      <i class="fas fa-arrows-alt drag-handle" style="font-size: 20px; color: #00aaff; cursor: move;"></i>
+      <i class="fas fa-cog" style="font-size: 20px; color: #00aaff;"></i>
+    </div>
+    <div class="center-icons">
+      <i class="fas fa-less-than" style="font-size: 20px; color: #00aaff;cursor: pointer;"></i>
+      <i class="fas fa-greater-than" style="font-size: 20px; color: #00aaff;cursor: pointer"></i>
+    </div>
+    <div class="right-icons">
+      <i class="fas fa-trash delete-column" style="font-size: 20px; color: red; cursor: pointer;"></i>
+    </div>
+  `;
+
+      col.appendChild(iconsContainer);
+
+      col.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('colId', col.id);
+        col.classList.add('dragging');
+      });
+
+      col.addEventListener('dragend', () => {
+        col.classList.remove('dragging');
+        normalizeRowFlex(col.parentNode); // Normalize after dragging
+      });
+
+      col.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const draggedCol = document.querySelector('.grid-col.dragging');
+        if (draggedCol && draggedCol !== col) {
+          if (draggedCol.parentNode === col.parentNode) {
+            const rect = col.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            if (x < rect.width / 2) {
+              col.parentNode.insertBefore(draggedCol, col);
+            } else {
+              col.parentNode.insertBefore(draggedCol, col.nextSibling);
+            }
+          }
+        }
+      });
+
+      col.addEventListener('drop', (e) => {
+        e.preventDefault();
+        normalizeRowFlex(col.parentNode); // Normalize after dropping
+      });
+
+      return col;
+    }
+
+    function createGridLayout(layout, target) {
+      const container = document.createElement('div');
+      container.className = 'grid-container';
+      const row = document.createElement('div');
+      row.className = 'grid-row';
+      row.dataset.layout = layout;
+
+      switch (layout) {
+        case '1-row':
+          row.appendChild(createColumn('col-1', 12)); // 12 grid units
+          row.style.height = '40px';
+          break;
+        case '2-equal':
+          row.appendChild(createColumn('', 6)); // 6 + 6 = 12 grid units
+          row.appendChild(createColumn('', 6));
+          row.style.height = '40px';
+          break;
+        case '3-equal':
+          row.appendChild(createColumn('', 4)); // 4 + 4 + 4 = 12 grid units
+          row.appendChild(createColumn('', 4));
+          row.appendChild(createColumn('', 4));
+          row.style.height = '40px';
+          break;
+        case '4-equal':
+          row.appendChild(createColumn('', 3)); // 3 + 3 + 3 + 3 = 12 grid units
+          row.appendChild(createColumn('', 3));
+          row.appendChild(createColumn('', 3));
+          row.appendChild(createColumn('', 3));
+          row.style.height = '40px';
+          break;
+        case '1-2-split':
+          row.appendChild(createColumn('', 4)); // 4 + 8 = 12 grid units
+          row.appendChild(createColumn('col-2', 8));
+          row.style.height = '40px';
+          break;
+        case '2-1-split':
+          row.appendChild(createColumn('col-2', 8)); // 8 + 4 = 12 grid units
+          row.appendChild(createColumn('', 4));
+          row.style.height = '40px';
+          break;
+        case '5-equal':
+          for (let i = 0; i < 5; i++) {
+            row.appendChild(createColumn('', 2.4)); // 2.4 * 5 = 12 grid units
+          }
+          row.style.height = '40px';
+          break;
+        case '2-8-2-split':
+          row.appendChild(createColumn('', 2)); // 2 + 8 + 2 = 12 grid units
+          row.appendChild(createColumn('', 8));
+          row.appendChild(createColumn('', 2));
+          row.style.height = '40px';
+          break;
+      }
+      container.appendChild(row);
+      target.appendChild(container);
+    }
+
+
+    // Add event listener for "less than", "greater than", and delete icons  stretching and shrinking
+    document.addEventListener('click', (e) => {
+      const lessThanIcon = e.target.closest('.fa-less-than');
+      const greaterThanIcon = e.target.closest('.fa-greater-than');
+
+      if (lessThanIcon) {
+        console.log('Less than icon clicked');
+
+        const col = lessThanIcon.closest('.grid-col');
+        if (col) {
+          const parentRow = col.parentNode;
+          const layout = parentRow.dataset.layout || 'custom';
+
+          const currentFlex = parseFloat(col.dataset.flex || col.style.flex || '0');
+          // Prevent reducing if the column is already at the minimum width (1 grid unit)
+          if (currentFlex <= 1) {
+            alert('Cannot reduce the column width further.');
+            return;
+          }
+
+          // Calculate the total grid units before the change
+          const columns = parentRow.querySelectorAll('.grid-col');
+          let addButton = parentRow.querySelector('.add-column-button');
+          let totalGridUnits = 0;
+          columns.forEach(c => {
+            totalGridUnits += parseFloat(c.dataset.flex || c.style.flex || '0');
+          });
+          if (addButton) {
+            totalGridUnits += parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
+          }
+          console.log('Total grid units before decrease:', totalGridUnits);
+
+          // Reduce the column width by 1 grid unit
+          const newFlex = currentFlex - 1;
+          col.style.flex = newFlex.toString();
+          col.dataset.flex = newFlex.toString();
+
+          // Adjust the "Add Column" button
+          const reducedFlex = 1; // 1 grid unit reduced
+          if (addButton) {
+            const currentAddButtonFlex = parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
+            const newAddButtonFlex = currentAddButtonFlex + reducedFlex;
+            addButton.style.flex = newAddButtonFlex.toString();
+            addButton.dataset.flex = newAddButtonFlex.toString();
+          } else {
+            addButton = createAddColumnButton(reducedFlex, layout);
+            parentRow.appendChild(addButton);
+          }
+
+          // Verify the total after the change
+          totalGridUnits = 0;
+          columns.forEach(c => {
+            totalGridUnits += parseFloat(c.dataset.flex || c.style.flex || '0');
+          });
+          if (addButton) {
+            totalGridUnits += parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
+          }
+          console.log('Total grid units after decrease:', totalGridUnits);
+        } else {
+          console.error('Column not found');
+        }
+      }
+
+      if (greaterThanIcon) {
+        console.log('Greater than icon clicked');
+
+        const col = greaterThanIcon.closest('.grid-col');
+        if (col) {
+          const parentRow = col.parentNode;
+          const layout = parentRow.dataset.layout || 'custom';
+
+          // Check if an "Add Column" button exists
+          let addButton = parentRow.querySelector('.add-column-button');
+
+          if (!addButton) {
+            alert('Stretch not possible - row is full. Shrink a control first to make room.');
+            return;
+          }
+
+          // Calculate the total grid units before the change
+          const columns = parentRow.querySelectorAll('.grid-col');
+          let totalGridUnits = 0;
+          columns.forEach(c => {
+            totalGridUnits += parseFloat(c.dataset.flex || c.style.flex || '0');
+          });
+          const addButtonFlex = parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
+          totalGridUnits += addButtonFlex;
+          console.log('Total grid units before increase:', totalGridUnits);
+
+          // Increase the column width by 1 grid unit
+          const currentFlex = parseFloat(col.dataset.flex || col.style.flex || '0');
+          const newFlex = currentFlex + 1;
+          col.style.flex = newFlex.toString();
+          col.dataset.flex = newFlex.toString();
+
+          // Decrease the "Add Column" button's width by 1 grid unit
+          const newAddButtonFlex = addButtonFlex - 1;
+          if (newAddButtonFlex <= 0) {
+            addButton.remove(); // Remove the button if its width becomes 0 or less
+          } else {
+            addButton.style.flex = newAddButtonFlex.toString();
+            addButton.dataset.flex = newAddButtonFlex.toString();
+          }
+
+          // Verify the total after the change
+          totalGridUnits = 0;
+          columns.forEach(c => {
+            totalGridUnits += parseFloat(c.dataset.flex || c.style.flex || '0');
+          });
+          addButton = parentRow.querySelector('.add-column-button'); // Re-query in case it was removed
+          if (addButton) {
+            totalGridUnits += parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
+          }
+          console.log('Total grid units after increase:', totalGridUnits);
+        } else {
+          console.error('Column not found');
+        }
+      }
+
+      // Delete column logic
+      const deleteIcon = e.target.closest('.delete-column');
+      if (deleteIcon) {
+        console.log('Delete icon clicked');
+        const col = deleteIcon.closest('.grid-col');
+        if (col) {
+          const parentRow = col.parentNode;
+          const layout = parentRow.dataset.layout;
+
+          const colFlex = parseFloat(col.dataset.flex || col.style.flex || '0');
+          col.remove();
+
+          let addButton = parentRow.querySelector('.add-column-button');
+          if (addButton) {
+            const currentAddButtonFlex = parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
+            const newAddButtonFlex = currentAddButtonFlex + colFlex;
+            addButton.style.flex = newAddButtonFlex.toString();
+            addButton.dataset.flex = newAddButtonFlex.toString();
+          } else {
+            addButton = createAddColumnButton(colFlex, layout);
+            parentRow.appendChild(addButton);
+          }
+
+          if (!parentRow.querySelector('.grid-col')) {
+            const container = parentRow.parentNode;
+            const newRow = document.createElement('div');
+            newRow.className = 'grid-row';
+            newRow.style.height = '40px';
+            newRow.dataset.layout = layout;
+            newRow.appendChild(addButton);
+            container.appendChild(newRow);
+            parentRow.remove();
+          }
+
+          // Verify the total after the change
+          let totalGridUnits = 0;
+          const columns = parentRow.querySelectorAll('.grid-col');
+          columns.forEach(c => {
+            totalGridUnits += parseFloat(c.dataset.flex || c.style.flex || '0');
+          });
+          addButton = parentRow.querySelector('.add-column-button'); // Re-query in case it was removed
+          if (addButton) {
+            totalGridUnits += parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
+          }
+          console.log('Total grid units after delete:', totalGridUnits);
+        } else {
+          console.error('Column not found');
+        }
+      }
+    });
+
+    function createAddColumnButton(flexValue, layout) {
+      const addButton = document.createElement('div');
+      addButton.className = 'add-column-button';
+      addButton.style.flex = flexValue.toString();
+      addButton.dataset.flex = flexValue.toString();
+      addButton.dataset.layout = layout;
+      addButton.style.height = '40px';
+      addButton.style.display = 'flex';
+      addButton.style.alignItems = 'center';
+      addButton.style.justifyContent = 'center';
+      addButton.style.border = '2px dashed rgba(7, 197, 255, 0.8)';
+      addButton.style.cursor = 'pointer';
+      addButton.style.backgroundColor = '#fafdff';
+
+      const icon = document.createElement('i');
+      icon.className = 'fas fa-plus';
+      icon.style.fontSize = '20px';
+      icon.style.color = '#00aaff';
+
+      addButton.appendChild(icon);
+
+      addButton.addEventListener('click', () => {
+        const currentFlex = parseFloat(addButton.dataset.flex);
+        const layout = addButton.dataset.layout;
+        const parentRow = addButton.parentNode;
+
+        // Add a new column with the same flex value as the add button
+        const newColumn = createColumn('', currentFlex);
+        parentRow.insertBefore(newColumn, addButton);
+
+        // Remove the add button entirely
+        addButton.remove();
+
+        // Verify the total after the change
+        let totalGridUnits = 0;
+        const columns = parentRow.querySelectorAll('.grid-col');
+        columns.forEach(c => {
+          totalGridUnits += parseFloat(c.dataset.flex || c.style.flex || '0');
+        });
+        console.log('Total grid units after adding column:', totalGridUnits);
+
+        // Restore layout proportions if needed
+        if (layout === '1-2-split' || layout === '2-1-split') {
+          const columns = parentRow.querySelectorAll('.grid-col');
+          if (columns.length === 2) {
+            if (layout === '1-2-split') {
+              columns[0].style.flex = '4';
+              columns[0].dataset.flex = '4';
+              columns[1].style.flex = '8';
+              columns[1].dataset.flex = '8';
+            } else if (layout === '2-1-split') {
+              columns[0].style.flex = '8';
+              columns[0].dataset.flex = '8';
+              columns[1].style.flex = '4';
+              columns[1].dataset.flex = '4';
+            }
+          }
+        }
+      });
+
+      return addButton;
+    }
+
+
+
+
+    // move colums addDragAndDropFunctionality
+    function addDragAndDropFunctionality(col) {
+      col.addEventListener('dragstart', (e) => {
+        col.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', ''); // Required for drag-and-drop to work in some browsers
+      });
+
+      col.addEventListener('dragend', () => {
+        col.classList.remove('dragging');
+      });
+
+      col.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const draggedCol = document.querySelector('.grid-col.dragging');
+        if (draggedCol && draggedCol !== col) {
+          const rect = col.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+
+          if (x < rect.width / 2) {
+            col.parentNode.insertBefore(draggedCol, col);
+          } else {
+            col.parentNode.insertBefore(draggedCol, col.nextSibling);
+          }
+        }
+      });
+    }
+
+    document.getElementById('tabs-container').addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (!draggedTab) return;
+
+      const tabsContainer = document.getElementById('tabs-container');
+      const afterElement = getDragAfterElement(tabsContainer, e.clientX);
+
+      if (afterElement) {
+        tabsContainer.insertBefore(draggedTab, afterElement);
+      } else {
+        tabsContainer.appendChild(draggedTab);
+      }
+    });
+
+    function getDragAfterElement(container, x) {
+      const draggableElements = [...container.querySelectorAll('.tab:not(.dragging)')];
+
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = x - box.left - box.width / 2;
+
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // Add styles for dragging
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+  .grid-col {
+    border: 2px dashed gray !important;
+    min-height: 40px !important;
+    padding: 8px !important;
+  }
+  .grid-col.active {
+    border-color: rgba(7, 197, 255, 0.8);
+    background: rgba(7, 197, 255, 0.05);
+  }
+  .grid-col.dragging {
+    opacity: 0.5;
+    border-style: dashed;
+    border-color: #00aaff;
+  }
+  .grid-col.col-1 {
+    flex: 1;
+    height: 40px;
+  }
+  .grid-row {
+    min-height: 40px !important;
+  }
+  .tab.dragging {
+    opacity: 0.5;
+    transform: scale(1.05);
+    z-index: 100;
+    background: #0088cc;
+  }
+  #tabs-container {
+    position: relative;
+  }
+  .column-icons {
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 10;
+  }
+`;
+    document.head.appendChild(styleSheet);
+
+    // Add Font Awesome script
+    const faScript = document.createElement('script');
+    faScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js';
+    document.head.appendChild(faScript);
+
+  </script>
+</body>
+
+</html>
