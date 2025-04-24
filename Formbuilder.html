@@ -18,6 +18,7 @@
       padding: 0;
       height: 100vh;
       overflow: hidden;
+      overflow-y: auto;
     }
 
     .container {
@@ -98,7 +99,7 @@
       padding: 10px 8px;
       cursor: move;
       font-size: 13px;
-      border-radius: 4px;
+      border-radius: 2px;
       transition: background-color 0.3s ease;
       user-select: none;
     }
@@ -106,10 +107,6 @@
     .field-button:hover {
       background-color: #008bb5;
     }
-
-    /* .field-button:active {
-      cursor: grabbing;
-    } */
 
     .field-button.disabled {
       opacity: 0.5;
@@ -414,11 +411,6 @@
       cursor: move;
     }
 
-    /* .section-preview:hover {
-      border-color: rgba(7, 197, 255, 0.4);
-      background: white;
-    } */
-
     /* Tab Preview Structure */
     .tab-preview {
       position: relative;
@@ -503,14 +495,9 @@
       }
     }
 
-    .grid-col {
-      position: relative;
-    }
-
-
     .column-icons {
       position: absolute;
-      top: 50%;
+      top: 35%;
       left: 0;
       right: 0;
       transform: translateY(-50%);
@@ -518,6 +505,8 @@
       justify-content: space-between;
       align-items: center;
       padding: 0 10px;
+      background: rgba(7, 197, 255, 0.05);
+      z-index: 20;
     }
 
     .column-icons .left-icons {
@@ -586,10 +575,11 @@
     }
 
     .grid-col {
+      position: relative;
       display: flex;
       flex-direction: column;
       gap: 10px;
-
+      overflow-y: hidden;
     }
 
     .field-panel-header {
@@ -618,6 +608,41 @@
 
     .add-tab-dropzone.active {
       border-color: rgba(7, 197, 255, 1);
+    }
+
+    .grid-col-label {
+      position: absolute;
+      top: 20%;
+      left: 10px;
+      font-size: 12px;
+      color: rgba(7, 197, 255, 0.8);
+      font-weight: 600;
+      transform: translateY(-50%);
+      transition: all 0.2s ease;
+      pointer-events: none;
+    }
+
+
+
+    .grid-col-label::after {
+      content: ' *';
+      color: red;
+    }
+
+    .grid-col input {
+      width: 100%;
+      border: none !important;
+      background: transparent !important;
+      font-size: 14px;
+      padding: 0 !important;
+      outline: none;
+      position: relative;
+      z-index: 20;
+      line-height: normal;
+    }
+
+    .grid-col input:focus {
+      z-index: 20;
     }
   </style>
 </head>
@@ -761,17 +786,13 @@
       });
     });
 
-    // Set up dragging for field buttons
+    // Enable dragging for field buttons
     document.querySelectorAll('.field-button').forEach(button => {
       button.addEventListener('dragstart', function (e) {
-        if (this.classList.contains('disabled')) {
-          e.preventDefault();
-          return;
-        }
         e.dataTransfer.setData('type', 'field');
         e.dataTransfer.setData('fieldType', this.dataset.type);
         e.dataTransfer.setData('label', this.innerText);
-        e.dataTransfer.setData('buttonId', this.id);
+        e.dataTransfer.setData('fieldId', this.id); // Store the field button's ID
       });
     });
 
@@ -780,7 +801,7 @@
       button.id = 'field-' + button.dataset.type;
     });
 
-    document.querySelectorAll('.grid-col, .grid-row').forEach((element) => {
+    document.querySelectorAll('.grid-row').forEach((element) => {
       element.addEventListener('dragover', (e) => {
         e.preventDefault();
       });
@@ -832,7 +853,6 @@
         if (firstTab) {
           activateTab(firstTab);
         } else {
-          // If no tabs remain, remove the tabs-container and add-tab-dropzone, and show the initial dropzone text
           const tabsContainer = document.getElementById('tabs-container');
           if (tabsContainer) tabsContainer.remove();
           const addTabDropzone = document.getElementById('add-tab-dropzone');
@@ -847,13 +867,11 @@
       tab.appendChild(label);
       tab.appendChild(actions);
 
-      // Create corresponding tab content
       const tabContent = document.createElement('div');
       tabContent.id = tabId + '-content';
       tabContent.className = 'tab-dropzone';
       tabContent.style.display = 'none';
 
-      // Add "Drop a Row" placeholder
       const rowPlaceholder = document.createElement('div');
       rowPlaceholder.className = 'row-placeholder';
       rowPlaceholder.textContent = 'Drop a Row';
@@ -863,7 +881,6 @@
       rowPlaceholder.style.color = '#666';
       rowPlaceholder.style.marginBottom = '10px';
 
-      // Add drag and drop functionality to the placeholder
       rowPlaceholder.addEventListener('dragover', (e) => {
         e.preventDefault();
         rowPlaceholder.classList.add('active');
@@ -890,16 +907,13 @@
 
       tabContent.appendChild(rowPlaceholder);
 
-      // Append tab content to the dropzone
       const dropzone = document.getElementById('dropzone');
       dropzone.appendChild(tabContent);
 
-      // Add click event to make tab active
       tab.addEventListener('click', () => {
         activateTab(tab);
       });
 
-      // Add drag events for tab reordering
       tab.addEventListener('dragstart', (e) => {
         draggedTab = tab;
         tabDragStartX = e.clientX;
@@ -913,6 +927,8 @@
         tab.classList.remove('dragging');
         draggedTab = null;
       });
+
+
 
       return tab;
     }
@@ -931,7 +947,6 @@
         tabContent.style.display = 'block';
       }
 
-      // Hide the dropzone text when a tab is active
       document.getElementById('dropzone-text').style.display = 'none';
     }
 
@@ -944,7 +959,6 @@
       fieldsetContainer.style.marginTop = '20px';
       fieldsetContainer.style.position = 'relative';
 
-      // Add fieldset name display
       const fieldsetNameContainer = document.createElement('div');
       fieldsetNameContainer.className = 'fieldset-name-container';
       fieldsetNameContainer.style.display = 'flex';
@@ -954,16 +968,14 @@
 
       const fieldsetName = document.createElement('div');
       fieldsetName.className = 'fieldset-name';
-      fieldsetName.textContent = 'Fieldset Name'; // Default name
+      fieldsetName.textContent = 'Fieldset Name';
       fieldsetName.style.fontWeight = 'bold';
 
-      // Add fieldset controls (delete, settings)
       const controls = document.createElement('div');
       controls.className = 'fieldset-controls';
       controls.style.display = 'flex';
       controls.style.gap = '5px';
 
-      // Delete button
       const deleteBtn = document.createElement('button');
       deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
       deleteBtn.style.background = 'none';
@@ -973,7 +985,6 @@
       deleteBtn.style.fontSize = '16px';
       deleteBtn.onclick = () => fieldsetContainer.remove();
 
-      // Settings button
       const settingsBtn = document.createElement('button');
       settingsBtn.innerHTML = '<i class="fas fa-cog"></i>';
       settingsBtn.style.background = 'none';
@@ -989,7 +1000,6 @@
       fieldsetNameContainer.appendChild(controls);
       fieldsetContainer.appendChild(fieldsetNameContainer);
 
-      // Add inner drop zone
       const innerDropzone = document.createElement('div');
       innerDropzone.className = 'fieldset-inner-dropzone';
       innerDropzone.style.minHeight = '100px';
@@ -999,7 +1009,6 @@
       innerDropzone.style.padding = '10px';
       innerDropzone.style.marginTop = '20px';
 
-      // Add drag-and-drop functionality to the inner drop zone
       innerDropzone.addEventListener('dragover', (e) => {
         e.preventDefault();
         innerDropzone.style.borderColor = '#00aaff';
@@ -1018,6 +1027,12 @@
           const fieldType = e.dataTransfer.getData('fieldType');
           const fieldLabel = e.dataTransfer.getData('label');
           addFieldToGrid(innerDropzone, fieldType, fieldLabel);
+          // Disable the dragged field button
+          const fieldId = e.dataTransfer.getData('fieldId');
+          const fieldButton = document.getElementById(fieldId);
+          if (fieldButton) {
+            fieldButton.classList.add('disabled');
+          }
         } else {
           alert('Only fields can be dropped here.');
         }
@@ -1047,13 +1062,11 @@
       dropzone.classList.remove('active');
 
       const type = e.dataTransfer.getData('type');
-      console.log('Dropped type:', type); // Debug log
+      console.log('Dropped type:', type);
 
-      // Initial state: Only allow dropping a Tab
       if (!document.getElementById('tabs-container')) {
         if (type === 'tab') {
-          console.log('Tab dropped successfully'); // Debug log
-          // Create the tabs-container dynamically
+          console.log('Tab dropped successfully');
           let tabsContainer = document.createElement('div');
           tabsContainer.id = 'tabs-container';
           tabsContainer.className = 'tabs-container';
@@ -1063,17 +1076,28 @@
           tabsContainer.appendChild(newTab);
           activateTab(newTab);
 
-          // Hide the initial dropzone text
           document.getElementById('dropzone-text').style.display = 'none';
 
-          // Create the "Drop a Tab" drop zone in the top-right corner
           let addTabDropzone = document.createElement('div');
           addTabDropzone.id = 'add-tab-dropzone';
           addTabDropzone.className = 'add-tab-dropzone';
           addTabDropzone.textContent = 'Drop a Tab';
           dropzone.appendChild(addTabDropzone);
 
-          // Add drag-and-drop functionality to the "Drop a Tab" dropzone
+          // Attach the dragover event listener to tabsContainer after it's created
+          tabsContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!draggedTab) return;
+
+            const afterElement = getDragAfterElement(tabsContainer, e.clientX);
+
+            if (afterElement) {
+              tabsContainer.insertBefore(draggedTab, afterElement);
+            } else {
+              tabsContainer.appendChild(draggedTab);
+            }
+          });
+
           addTabDropzone.addEventListener('dragover', (e) => {
             e.preventDefault();
             addTabDropzone.classList.add('active');
@@ -1087,7 +1111,7 @@
             e.preventDefault();
             addTabDropzone.classList.remove('active');
             const dropType = e.dataTransfer.getData('type');
-            console.log('Dropped into Add Tab Dropzone, type:', dropType); // Debug log
+            console.log('Dropped into Add Tab Dropzone, type:', dropType);
             if (dropType === 'tab') {
               const tabsContainer = document.getElementById('tabs-container');
               const newTab = createTab();
@@ -1098,7 +1122,7 @@
             }
           });
         } else {
-          console.log('Invalid drop: Expected a Tab, got:', type); // Debug log
+          console.log('Invalid drop: Expected a Tab, got:', type);
           alert('Only a Tab can be dropped here initially.');
         }
       }
@@ -1109,7 +1133,6 @@
 
       const type = e.dataTransfer.getData('type');
 
-      // Ensure the drop target is a valid grid column or row drop zone
       const dropTarget = e.target.closest('.grid-col') || e.target.closest('.grid-row');
       if (!dropTarget) {
         alert('You can only drop fields inside a valid grid column or row.');
@@ -1117,9 +1140,21 @@
       }
 
       if (type === 'field') {
+
+        if (dropTarget.classList.contains('grid-col') && dropTarget.querySelector('input')) {
+          alert('This column already contains a field. Each column can only have one field.');
+          return;
+        }
         const fieldType = e.dataTransfer.getData('fieldType');
         const fieldLabel = e.dataTransfer.getData('label');
-        addFieldToGrid(dropTarget, fieldType, fieldLabel);
+        const fieldId = e.dataTransfer.getData('fieldId'); // Get the field button's ID
+        replaceFieldInGrid(dropTarget, fieldType, fieldLabel); // Use replaceFieldInGrid
+
+        // Disable the dragged field button
+        const fieldButton = document.getElementById(fieldId);
+        if (fieldButton) {
+          fieldButton.classList.add('disabled');
+        }
       } else if (type === 'layout') {
         const layout = e.dataTransfer.getData('layout');
         createGridLayout(layout, dropTarget);
@@ -1129,36 +1164,42 @@
       }
     }
 
-    // functionio to add input in grid
     function addFieldToGrid(target, fieldType, fieldLabel) {
       const formField = document.createElement('div');
       formField.classList.add('form-field');
 
       const label = document.createElement('label');
-      label.textContent = fieldLabel;
       label.style.fontSize = '14px';
       label.style.color = '#333';
       label.style.marginBottom = '5px';
       label.style.display = 'block';
+
+      const labelText = document.createElement('span');
+      labelText.textContent = fieldLabel;
+      const requiredAsterisk = document.createElement('span');
+      requiredAsterisk.textContent = ' *';
+      requiredAsterisk.style.color = 'red';
+      label.appendChild(labelText);
+      label.appendChild(requiredAsterisk);
 
       const input = document.createElement('input');
       input.type = fieldType === 'email' ? 'email' : 'text';
       input.placeholder = `Enter ${fieldLabel}`;
       input.style.width = '100%';
       input.style.padding = '10px';
-      input.style.border = '1px solid rgba(7, 197, 255, 0.5)';
+      input.style.border = '1px solid #ccc';
       input.style.borderRadius = '4px';
       input.style.fontSize = '14px';
       input.style.boxSizing = 'border-box';
+      input.style.backgroundColor = '#f5f5f5';
 
-      // Add hover and focus effects
       input.addEventListener('focus', () => {
         input.style.borderColor = 'rgba(7, 197, 255, 0.8)';
         input.style.outline = 'none';
       });
 
       input.addEventListener('blur', () => {
-        input.style.borderColor = 'rgba(7, 197, 255, 0.5)';
+        input.style.borderColor = '#ccc';
       });
 
       formField.appendChild(label);
@@ -1167,12 +1208,10 @@
       target.appendChild(formField);
     }
 
-    // Helper function to normalize flex values to sum to 12 grid units
     function normalizeRowFlex(row) {
       const columns = row.querySelectorAll('.grid-col');
       const addButton = row.querySelector('.add-column-button');
 
-      // Calculate the total current flex units
       let totalFlex = 0;
       columns.forEach(col => {
         const flex = parseFloat(col.dataset.flex || col.style.flex || '0');
@@ -1183,16 +1222,15 @@
         totalFlex += flex;
       }
 
-      console.log('Total flex before normalization:', totalFlex); // Debug log
+      console.log('Total flex before normalization:', totalFlex);
 
-      if (totalFlex === 0) return; // Avoid division by zero
+      if (totalFlex === 0) return;
 
-      // Normalize to 12 grid units
       const scaleFactor = 12 / totalFlex;
       columns.forEach(col => {
         const currentFlex = parseFloat(col.dataset.flex || col.style.flex || '0');
         const newFlex = currentFlex * scaleFactor;
-        col.style.flex = newFlex.toFixed(2); // Round to avoid floating-point issues
+        col.style.flex = newFlex.toFixed(2);
         col.dataset.flex = newFlex.toFixed(2);
       });
       if (addButton) {
@@ -1202,7 +1240,6 @@
         addButton.dataset.flex = newFlex.toFixed(2);
       }
 
-      // Double-check the total after normalization
       let totalAfter = 0;
       columns.forEach(col => {
         totalAfter += parseFloat(col.dataset.flex || col.style.flex || '0');
@@ -1210,9 +1247,8 @@
       if (addButton) {
         totalAfter += parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
       }
-      console.log('Total flex after normalization:', totalAfter); // Debug log
+      console.log('Total flex after normalization:', totalAfter);
     }
-
 
     function createColumn(className = '', flexValue = 1) {
       const col = document.createElement('div');
@@ -1249,7 +1285,7 @@
 
       col.addEventListener('dragend', () => {
         col.classList.remove('dragging');
-        normalizeRowFlex(col.parentNode); // Normalize after dragging
+        normalizeRowFlex(col.parentNode);
       });
 
       col.addEventListener('dragover', (e) => {
@@ -1270,12 +1306,15 @@
 
       col.addEventListener('drop', (e) => {
         e.preventDefault();
-        normalizeRowFlex(col.parentNode); // Normalize after dropping
+        handleDrop(e, col);
+        normalizeRowFlex(col.parentNode);
       });
 
       return col;
     }
 
+
+    // grid layout
     function createGridLayout(layout, target) {
       const container = document.createElement('div');
       container.className = 'grid-container';
@@ -1285,45 +1324,45 @@
 
       switch (layout) {
         case '1-row':
-          row.appendChild(createColumn('col-1', 12)); // 12 grid units
+          row.appendChild(createColumn('col-1', 12));
           row.style.height = '40px';
           break;
         case '2-equal':
-          row.appendChild(createColumn('', 6)); // 6 + 6 = 12 grid units
+          row.appendChild(createColumn('', 6));
           row.appendChild(createColumn('', 6));
           row.style.height = '40px';
           break;
         case '3-equal':
-          row.appendChild(createColumn('', 4)); // 4 + 4 + 4 = 12 grid units
+          row.appendChild(createColumn('', 4));
           row.appendChild(createColumn('', 4));
           row.appendChild(createColumn('', 4));
           row.style.height = '40px';
           break;
         case '4-equal':
-          row.appendChild(createColumn('', 3)); // 3 + 3 + 3 + 3 = 12 grid units
+          row.appendChild(createColumn('', 3));
           row.appendChild(createColumn('', 3));
           row.appendChild(createColumn('', 3));
           row.appendChild(createColumn('', 3));
           row.style.height = '40px';
           break;
         case '1-2-split':
-          row.appendChild(createColumn('', 4)); // 4 + 8 = 12 grid units
+          row.appendChild(createColumn('', 4));
           row.appendChild(createColumn('col-2', 8));
           row.style.height = '40px';
           break;
         case '2-1-split':
-          row.appendChild(createColumn('col-2', 8)); // 8 + 4 = 12 grid units
+          row.appendChild(createColumn('col-2', 8));
           row.appendChild(createColumn('', 4));
           row.style.height = '40px';
           break;
         case '5-equal':
           for (let i = 0; i < 5; i++) {
-            row.appendChild(createColumn('', 2.4)); // 2.4 * 5 = 12 grid units
+            row.appendChild(createColumn('', 2.4));
           }
           row.style.height = '40px';
           break;
         case '2-8-2-split':
-          row.appendChild(createColumn('', 2)); // 2 + 8 + 2 = 12 grid units
+          row.appendChild(createColumn('', 2));
           row.appendChild(createColumn('', 8));
           row.appendChild(createColumn('', 2));
           row.style.height = '40px';
@@ -1334,11 +1373,220 @@
     }
 
 
-    // Add event listener for "less than", "greater than", and delete icons  stretching and shrinking
+    // make grid to input 
+    function replaceFieldInGrid(target, fieldType, fieldLabel) {
+      // Clear the existing content but keep the grid-col class
+      target.innerHTML = ''; // Remove previous content (including icons)
+      target.style.border = '1px solid gray'; // Gray border to match the image
+      target.style.borderRadius = '4px'; // Rounded corners
+      target.style.backgroundColor = '#f4f7fc';
+      target.style.padding = '15px'; // Increased padding to accommodate the label
+      target.style.minHeight = 'auto'; // Allow the height to adjust to the input
+      target.style.display = 'flex';
+      target.style.flexDirection = 'column'; // Stack label and input vertically
+      target.style.alignItems = 'stretch'; // Stretch to full width
+
+      // Recreate the column icons to ensure they persist
+      const iconsContainer = document.createElement('div');
+      iconsContainer.className = 'column-icons';
+      iconsContainer.style.zIndex = '30'; // Higher z-index than the input
+      iconsContainer.innerHTML = `
+    <div class="left-icons">
+      <i class="fas fa-arrows-alt drag-handle" style="font-size: 20px; color: #00aaff; cursor: move;"></i>
+      <i class="fas fa-cog setting-input" style="font-size: 20px; color: #00aaff;cursor: pointer"></i>
+    </div>
+    <div class="center-icons">
+      <i class="fas fa-less-than" style="font-size: 20px; color: #00aaff; cursor: pointer;"></i>
+      <i class="fas fa-greater-than" style="font-size: 20px; color: #00aaff; cursor: pointer"></i>
+    </div>
+    <div class="right-icons">
+      <i class="fas fa-trash delete-column" style="font-size: 20px; color: red; cursor: pointer;"></i>
+    </div>
+  `;
+      target.appendChild(iconsContainer);
+
+      // Create the input field
+      const input = document.createElement('input');
+      input.type = fieldType === 'email' ? 'email' : 'text';
+      // Use a dummy placeholder to trigger the :not(:placeholder-shown) selector
+      input.placeholder = ' '; // Space ensures the placeholder-shown logic works
+      input.style.width = '100%';
+      input.style.padding = '10px 0 5px 0'; // Adjusted padding
+      input.style.border = 'none'; // No border on the input itself since the parent has the border
+      input.style.borderRadius = '4px';
+      input.style.fontSize = '14px';
+      input.style.boxSizing = 'border-box';
+      input.style.backgroundColor = '#f5f5f5'; // Transparent background to use the parent's background
+      input.style.zIndex = '20'; // Lower z-index than the icons by default
+
+      // Create the label element
+      const label = document.createElement('label');
+      label.className = 'grid-col-label';
+      label.textContent = fieldLabel; // Use the field label (e.g., "Last Name")
+
+      // Add focus and blur effects for the border
+      input.addEventListener('focus', () => {
+        target.style.borderColor = 'rgba(7, 197, 255, 0.8)';
+        input.style.outline = 'none';
+        // Hide the column icons when the input is focused
+        iconsContainer.style.display = 'none';
+      });
+
+      input.addEventListener('blur', () => {
+        target.style.borderColor = '#ccc';
+        // Show the column icons on blur, but only if the grid-col is hovered
+        if (target.matches(':hover')) {
+          iconsContainer.style.display = 'flex';
+        }
+      });
+
+      // Append the input and label to the target
+      target.appendChild(input);
+      target.appendChild(label); // Label must be after the input for the sibling selector to work
+
+      // Ensure the target retains drag-and-drop functionality
+      target.draggable = true;
+
+      // Reattach event listeners to preserve grid functionality
+      target.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('colId', target.id);
+        target.classList.add('dragging');
+      });
+
+      target.addEventListener('dragend', () => {
+        target.classList.remove('dragging');
+        normalizeRowFlex(target.parentNode);
+      });
+
+      target.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const draggedCol = document.querySelector('.grid-col.dragging');
+        if (draggedCol && draggedCol !== target) {
+          if (draggedCol.parentNode === target.parentNode) {
+            const rect = target.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            if (x < rect.width / 2) {
+              target.parentNode.insertBefore(draggedCol, target);
+            } else {
+              target.parentNode.insertBefore(draggedCol, target.nextSibling);
+            }
+          }
+        }
+      });
+
+      target.addEventListener('drop', (e) => {
+        e.preventDefault();
+        handleDrop(e, target);
+        normalizeRowFlex(target.parentNode);
+      });
+
+      // Add mouseenter and mouseleave events to show/hide icons based on focus state
+      target.addEventListener('mouseenter', () => {
+        // Only show icons if the input is not focused
+        if (document.activeElement !== input) {
+          iconsContainer.style.display = 'flex';
+        }
+      });
+
+      target.addEventListener('mouseleave', () => {
+        // Hide icons when not hovering, regardless of focus state
+        iconsContainer.style.display = 'none';
+      });
+
+      // Normalize the parent row's flex values
+      normalizeRowFlex(target.parentNode);
+    }
+
+    function openFieldSettings(fieldType, fieldLabel, input) {
+      console.log('openFieldSettings called with:', { fieldType, fieldLabel, input });
+      const modal = document.createElement('div');
+      modal.className = 'settings-modal';
+      modal.style.position = 'fixed';
+      modal.style.top = '50%';
+      modal.style.left = '50%';
+      modal.style.transform = 'translate(-50%, -50%)';
+      modal.style.background = '#fff';
+      modal.style.padding = '20px';
+      modal.style.borderRadius = '8px';
+      modal.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+      modal.style.zIndex = '1000';
+
+      modal.innerHTML = `
+    <h4 style="display:flex;justify-content:center;margin-top:-5px">${fieldLabel}</h4>
+    <label style="display: block; margin-bottom: 12px;">
+      <span style="font-weight:600">Input</span><br>
+      <select id="field-type-input" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;margin-top:4px;">
+        <option value="text" ${fieldType === 'text' ? 'selected' : ''}>Short Text</option>
+        <option value="email" ${fieldType === 'email' ? 'selected' : ''}>Email</option>
+      </select>
+    </label>
+    <label style="display: block; margin-bottom: 12px;">
+      <span style="font-weight:600">Label Name</span><br>
+      <input type="text" id="label-input" value="${fieldLabel}" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;margin-top:4px;" />
+    </label>
+    <label style="display: block; margin-bottom: 12px;">
+      <span style="font-weight:600">Tooltip</span><br>
+      <input type="text" id="tooltip-input" value="${input.title || ''}" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;margin-top:4px;" />
+    </label>
+    <label style="display: block; margin-bottom: 12px;">
+      <span style="font-weight:600">Placeholder Description</span><br>
+      <input type="text" id="placeholder-input" value="${input.placeholder === ' ' ? '' : input.placeholder}" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;margin-top:4px;" />
+    </label>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <label style="flex: 1;">
+        <span style="font-weight:600">Maximum Length</span><br>
+        <input type="number" id="charlength-input" value="${input.maxLength > 0 ? input.maxLength : ''}" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;margin-top:4px;" />
+      </label>
+      <label style="flex: 1; text-align: right;">
+        <span style="font-weight:600">Read Only</span><br>
+        <input type="checkbox" id="readonly-input" ${input.readOnly ? 'checked' : ''} /> Yes
+      </label>
+    </div>
+    <div style="display: flex; justify-content: space-between;">
+      <button id="save-settings" style="background: #28a745; color: #fff; border: none; padding: 7px; border-radius: 4px; cursor: pointer;">Done</button>
+      <button id="close-settings" style="background: #6c757d; color: #fff; border: none; padding: 7px; border-radius: 4px; cursor: pointer;">Cancel</button>
+    </div>
+  `;
+
+      document.body.appendChild(modal);
+
+      document.getElementById('save-settings').onclick = () => {
+        const newFieldType = document.getElementById('field-type-input').value;
+        const labelName = document.getElementById('label-input').value;
+        const placeholder = document.getElementById('placeholder-input').value;
+        const tooltip = document.getElementById('tooltip-input').value;
+        const readOnly = document.getElementById('readonly-input').checked;
+        const charLength = document.getElementById('charlength-input').value;
+
+        input.type = newFieldType;
+        input.placeholder = placeholder || ' '; // Ensure placeholder isn't empty for CSS selector
+        input.title = tooltip;
+        input.readOnly = readOnly;
+        input.maxLength = charLength ? parseInt(charLength, 10) : 0;
+
+        const labelElement = input.nextElementSibling;
+        if (labelElement && labelElement.tagName === 'LABEL') {
+          labelElement.textContent = labelName;
+        } else {
+          console.error('Label element not found for updating:', labelElement);
+        }
+
+        console.log('Settings saved:', { newFieldType, labelName, placeholder, tooltip, readOnly, charLength });
+        modal.remove();
+      };
+
+      document.getElementById('close-settings').onclick = () => {
+        console.log('Settings dialog closed without saving');
+        modal.remove();
+      };
+    }
+
+
+    // shrink and stretching colum 
     document.addEventListener('click', (e) => {
       const lessThanIcon = e.target.closest('.fa-less-than');
       const greaterThanIcon = e.target.closest('.fa-greater-than');
-
+      const gearIcon = e.target.closest('.setting-input');
       if (lessThanIcon) {
         console.log('Less than icon clicked');
 
@@ -1348,13 +1596,11 @@
           const layout = parentRow.dataset.layout || 'custom';
 
           const currentFlex = parseFloat(col.dataset.flex || col.style.flex || '0');
-          // Prevent reducing if the column is already at the minimum width (1 grid unit)
           if (currentFlex <= 1) {
             alert('Cannot reduce the column width further.');
             return;
           }
 
-          // Calculate the total grid units before the change
           const columns = parentRow.querySelectorAll('.grid-col');
           let addButton = parentRow.querySelector('.add-column-button');
           let totalGridUnits = 0;
@@ -1366,13 +1612,11 @@
           }
           console.log('Total grid units before decrease:', totalGridUnits);
 
-          // Reduce the column width by 1 grid unit
           const newFlex = currentFlex - 1;
           col.style.flex = newFlex.toString();
           col.dataset.flex = newFlex.toString();
 
-          // Adjust the "Add Column" button
-          const reducedFlex = 1; // 1 grid unit reduced
+          const reducedFlex = 1;
           if (addButton) {
             const currentAddButtonFlex = parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
             const newAddButtonFlex = currentAddButtonFlex + reducedFlex;
@@ -1383,7 +1627,6 @@
             parentRow.appendChild(addButton);
           }
 
-          // Verify the total after the change
           totalGridUnits = 0;
           columns.forEach(c => {
             totalGridUnits += parseFloat(c.dataset.flex || c.style.flex || '0');
@@ -1405,7 +1648,6 @@
           const parentRow = col.parentNode;
           const layout = parentRow.dataset.layout || 'custom';
 
-          // Check if an "Add Column" button exists
           let addButton = parentRow.querySelector('.add-column-button');
 
           if (!addButton) {
@@ -1413,7 +1655,6 @@
             return;
           }
 
-          // Calculate the total grid units before the change
           const columns = parentRow.querySelectorAll('.grid-col');
           let totalGridUnits = 0;
           columns.forEach(c => {
@@ -1423,27 +1664,24 @@
           totalGridUnits += addButtonFlex;
           console.log('Total grid units before increase:', totalGridUnits);
 
-          // Increase the column width by 1 grid unit
           const currentFlex = parseFloat(col.dataset.flex || col.style.flex || '0');
           const newFlex = currentFlex + 1;
           col.style.flex = newFlex.toString();
           col.dataset.flex = newFlex.toString();
 
-          // Decrease the "Add Column" button's width by 1 grid unit
           const newAddButtonFlex = addButtonFlex - 1;
           if (newAddButtonFlex <= 0) {
-            addButton.remove(); // Remove the button if its width becomes 0 or less
+            addButton.remove();
           } else {
             addButton.style.flex = newAddButtonFlex.toString();
             addButton.dataset.flex = newAddButtonFlex.toString();
           }
 
-          // Verify the total after the change
           totalGridUnits = 0;
           columns.forEach(c => {
             totalGridUnits += parseFloat(c.dataset.flex || c.style.flex || '0');
           });
-          addButton = parentRow.querySelector('.add-column-button'); // Re-query in case it was removed
+          addButton = parentRow.querySelector('.add-column-button');
           if (addButton) {
             totalGridUnits += parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
           }
@@ -1453,7 +1691,6 @@
         }
       }
 
-      // Delete column logic
       const deleteIcon = e.target.closest('.delete-column');
       if (deleteIcon) {
         console.log('Delete icon clicked');
@@ -1487,13 +1724,12 @@
             parentRow.remove();
           }
 
-          // Verify the total after the change
           let totalGridUnits = 0;
           const columns = parentRow.querySelectorAll('.grid-col');
           columns.forEach(c => {
             totalGridUnits += parseFloat(c.dataset.flex || c.style.flex || '0');
           });
-          addButton = parentRow.querySelector('.add-column-button'); // Re-query in case it was removed
+          addButton = parentRow.querySelector('.add-column-button');
           if (addButton) {
             totalGridUnits += parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
           }
@@ -1502,6 +1738,26 @@
           console.error('Column not found');
         }
       }
+
+      if (gearIcon) {
+        console.log('Gear icon clicked');
+        const col = gearIcon.closest('.grid-col');
+        if (col) {
+          const input = col.querySelector('input');
+          const label = col.querySelector('.grid-col-label');
+          if (input && label) {
+            const fieldType = input.type; // e.g., 'text' or 'email'
+            const fieldLabel = label.textContent; // e.g., 'First Name'
+            console.log('Opening settings with:', { fieldType, fieldLabel, input });
+            openFieldSettings(fieldType, fieldLabel, input);
+          } else {
+            console.error('Input or label not found in the grid column:', { input, label });
+          }
+        } else {
+          console.error('Grid column not found');
+        }
+      }
+
     });
 
     function createAddColumnButton(flexValue, layout) {
@@ -1530,14 +1786,11 @@
         const layout = addButton.dataset.layout;
         const parentRow = addButton.parentNode;
 
-        // Add a new column with the same flex value as the add button
         const newColumn = createColumn('', currentFlex);
         parentRow.insertBefore(newColumn, addButton);
 
-        // Remove the add button entirely
         addButton.remove();
 
-        // Verify the total after the change
         let totalGridUnits = 0;
         const columns = parentRow.querySelectorAll('.grid-col');
         columns.forEach(c => {
@@ -1545,7 +1798,6 @@
         });
         console.log('Total grid units after adding column:', totalGridUnits);
 
-        // Restore layout proportions if needed
         if (layout === '1-2-split' || layout === '2-1-split') {
           const columns = parentRow.querySelectorAll('.grid-col');
           if (columns.length === 2) {
@@ -1568,13 +1820,11 @@
     }
 
 
-
-
-    // move colums addDragAndDropFunctionality
+    // move colum function 
     function addDragAndDropFunctionality(col) {
       col.addEventListener('dragstart', (e) => {
         col.classList.add('dragging');
-        e.dataTransfer.setData('text/plain', ''); // Required for drag-and-drop to work in some browsers
+        e.dataTransfer.setData('text/plain', '');
       });
 
       col.addEventListener('dragend', () => {
@@ -1626,7 +1876,6 @@
       }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
 
-    // Add styles for dragging
     const styleSheet = document.createElement('style');
     styleSheet.textContent = `
   .grid-col {
@@ -1639,9 +1888,9 @@
     background: rgba(7, 197, 255, 0.05);
   }
   .grid-col.dragging {
-    opacity: 0.5;
-    border-style: dashed;
-    border-color: #00aaff;
+   opacity: 0.5;
+  border-style: dashed;
+  border-color: #00aaff;
   }
   .grid-col.col-1 {
     flex: 1;
@@ -1666,11 +1915,9 @@
 `;
     document.head.appendChild(styleSheet);
 
-    // Add Font Awesome script
     const faScript = document.createElement('script');
     faScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js';
     document.head.appendChild(faScript);
-
   </script>
 </body>
 
