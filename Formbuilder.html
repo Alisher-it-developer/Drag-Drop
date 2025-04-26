@@ -163,6 +163,9 @@
       background: transparent;
       width: 100%;
       /* Ensure full width */
+      align-items: flex-start;
+      overflow-x: auto;
+      scrollbar-width: thin;
     }
 
     .grid-col {
@@ -384,6 +387,7 @@
       padding: 20px;
       margin-top: 20px;
       position: relative;
+      z-index: 1;
     }
 
     /* Section Panel Styles */
@@ -644,6 +648,70 @@
     .grid-col input:focus {
       z-index: 20;
     }
+
+    .fieldset-name {
+      position: relative;
+      background-color: #f4f7fc;
+      padding: 2px 5px;
+      font-size: 14px;
+      color: #333;
+      cursor: text;
+    }
+
+    .fieldset-name:focus {
+      background-color: #fff;
+      border: 1px solid rgba(7, 197, 255, 0.8);
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .fieldset-name-wrapper {
+      position: absolute;
+      top: -18px;
+      /* Adjusted to move slightly higher, accounting for the 4px border */
+      left: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      /* High z-index to ensure it’s above the fieldset-container */
+      background: #f4f7fc;
+      /* Match the body background to cover the border */
+      padding: 0 5px;
+      /* Add padding to create a gap around the name */
+      border-radius: 4px;
+
+    }
+
+    .fieldset-icons {
+      display: none;
+      /* Hidden by default */
+      gap: 5px;
+      align-items: center;
+
+    }
+
+    .fieldset-icons.left-icons {
+      position: absolute;
+      left: -15px;
+      /* Position to the left of the name */
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .fieldset-icons.right-icons {
+      position: absolute;
+      right: -15px;
+      /* Position to the right of the name */
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+
+    /* .fieldset-container.dragging {
+      opacity: 0.5;
+      border-style: dashed;
+      border-color: #00aaff;
+    } */
   </style>
 </head>
 
@@ -892,7 +960,15 @@
 
       rowPlaceholder.addEventListener('drop', (e) => {
         e.preventDefault();
+        e.stopPropagation(); // Stop the event from bubbling up to the main dropzone
         rowPlaceholder.classList.remove('active');
+
+        // Check if the drop target is inside a fieldset's row-placeholder
+        const isInsideFieldsetRow = e.target.closest('.fieldset-container .row-placeholder');
+        if (isInsideFieldsetRow) {
+          // Let the fieldset's row-placeholder handle the drop
+          return;
+        }
 
         const type = e.dataTransfer.getData('type');
         const layout = e.dataTransfer.getData('layout');
@@ -928,8 +1004,6 @@
         draggedTab = null;
       });
 
-
-
       return tab;
     }
 
@@ -948,99 +1022,6 @@
       }
 
       document.getElementById('dropzone-text').style.display = 'none';
-    }
-
-    function createFieldset() {
-      const fieldsetContainer = document.createElement('div');
-      fieldsetContainer.className = 'fieldset-container';
-      fieldsetContainer.style.border = '4px solid #00aaff';
-      fieldsetContainer.style.borderRadius = '4px';
-      fieldsetContainer.style.padding = '20px';
-      fieldsetContainer.style.marginTop = '20px';
-      fieldsetContainer.style.position = 'relative';
-
-      const fieldsetNameContainer = document.createElement('div');
-      fieldsetNameContainer.className = 'fieldset-name-container';
-      fieldsetNameContainer.style.display = 'flex';
-      fieldsetNameContainer.style.alignItems = 'center';
-      fieldsetNameContainer.style.justifyContent = 'space-between';
-      fieldsetNameContainer.style.marginBottom = '10px';
-
-      const fieldsetName = document.createElement('div');
-      fieldsetName.className = 'fieldset-name';
-      fieldsetName.textContent = 'Fieldset Name';
-      fieldsetName.style.fontWeight = 'bold';
-
-      const controls = document.createElement('div');
-      controls.className = 'fieldset-controls';
-      controls.style.display = 'flex';
-      controls.style.gap = '5px';
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-      deleteBtn.style.background = 'none';
-      deleteBtn.style.border = 'none';
-      deleteBtn.style.color = '#ff4d4d';
-      deleteBtn.style.cursor = 'pointer';
-      deleteBtn.style.fontSize = '16px';
-      deleteBtn.onclick = () => fieldsetContainer.remove();
-
-      const settingsBtn = document.createElement('button');
-      settingsBtn.innerHTML = '<i class="fas fa-cog"></i>';
-      settingsBtn.style.background = 'none';
-      settingsBtn.style.border = 'none';
-      settingsBtn.style.color = '#00aaff';
-      settingsBtn.style.cursor = 'pointer';
-      settingsBtn.style.fontSize = '16px';
-      settingsBtn.onclick = () => openFieldsetSettings(fieldsetContainer, fieldsetName);
-
-      controls.appendChild(settingsBtn);
-      controls.appendChild(deleteBtn);
-      fieldsetNameContainer.appendChild(fieldsetName);
-      fieldsetNameContainer.appendChild(controls);
-      fieldsetContainer.appendChild(fieldsetNameContainer);
-
-      const innerDropzone = document.createElement('div');
-      innerDropzone.className = 'fieldset-inner-dropzone';
-      innerDropzone.style.minHeight = '100px';
-      innerDropzone.style.background = '#f9f9f9';
-      innerDropzone.style.border = '2px dashed #ccc';
-      innerDropzone.style.borderRadius = '4px';
-      innerDropzone.style.padding = '10px';
-      innerDropzone.style.marginTop = '20px';
-
-      innerDropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        innerDropzone.style.borderColor = '#00aaff';
-      });
-
-      innerDropzone.addEventListener('dragleave', () => {
-        innerDropzone.style.borderColor = '#ccc';
-      });
-
-      innerDropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        innerDropzone.style.borderColor = '#ccc';
-
-        const type = e.dataTransfer.getData('type');
-        if (type === 'field') {
-          const fieldType = e.dataTransfer.getData('fieldType');
-          const fieldLabel = e.dataTransfer.getData('label');
-          addFieldToGrid(innerDropzone, fieldType, fieldLabel);
-          // Disable the dragged field button
-          const fieldId = e.dataTransfer.getData('fieldId');
-          const fieldButton = document.getElementById(fieldId);
-          if (fieldButton) {
-            fieldButton.classList.add('disabled');
-          }
-        } else {
-          alert('Only fields can be dropped here.');
-        }
-      });
-
-      fieldsetContainer.appendChild(innerDropzone);
-
-      return fieldsetContainer;
     }
 
     const dropzone = document.getElementById('dropzone');
@@ -1130,38 +1111,389 @@
 
     function handleDrop(e, target) {
       e.preventDefault();
+      e.stopPropagation(); // Prevent event from bubbling up to parent dropzones
 
       const type = e.dataTransfer.getData('type');
 
-      const dropTarget = e.target.closest('.grid-col') || e.target.closest('.grid-row');
+      // Ensure the drop target is a grid-col
+      const dropTarget = e.target.closest('.grid-col');
       if (!dropTarget) {
-        alert('You can only drop fields inside a valid grid column or row.');
+        alert('You can only drop fields or fieldsets inside a valid grid column.');
         return;
       }
 
       if (type === 'field') {
+        // Re-enable the previous field button if the column already contains禁止使用 (Please use) contains a field
+        const existingFieldId = dropTarget.dataset.fieldId;
+        if (existingFieldId) {
+          const existingFieldButton = document.getElementById(existingFieldId);
+          if (existingFieldButton) {
+            existingFieldButton.classList.remove('disabled');
+            console.log(`Re-enabled field button: ${existingFieldId}`);
+          }
+        }
 
-        if (dropTarget.classList.contains('grid-col') && dropTarget.querySelector('input')) {
-          alert('This column already contains a field. Each column can only have one field.');
+        // Clear the previous fieldId from the column
+        delete dropTarget.dataset.fieldId;
+
+        // Check if the column already contains a field (input) or fieldset
+        if (dropTarget.querySelector('input') || dropTarget.querySelector('.fieldset-container')) {
+          alert('This column already contains a field or fieldset. Each column can only have one field or fieldset.');
           return;
         }
         const fieldType = e.dataTransfer.getData('fieldType');
         const fieldLabel = e.dataTransfer.getData('label');
-        const fieldId = e.dataTransfer.getData('fieldId'); // Get the field button's ID
-        replaceFieldInGrid(dropTarget, fieldType, fieldLabel); // Use replaceFieldInGrid
+        const fieldId = e.dataTransfer.getData('fieldId');
+        replaceFieldInGrid(dropTarget, fieldType, fieldLabel);
 
         // Disable the dragged field button
         const fieldButton = document.getElementById(fieldId);
         if (fieldButton) {
           fieldButton.classList.add('disabled');
         }
-      } else if (type === 'layout') {
-        const layout = e.dataTransfer.getData('layout');
-        createGridLayout(layout, dropTarget);
       } else if (type === 'fieldset') {
-        const fieldset = createFieldset();
-        dropTarget.appendChild(fieldset);
+        // Check if the column already contains a field (input) or fieldset
+        if (dropTarget.querySelector('input') || dropTarget.querySelector('.fieldset-container')) {
+          alert('This column already contains a field or fieldset. Each column can only have one field or fieldset.');
+          return;
+        }
+
+        // Transform the grid-col into a container
+        transformGridColToContainer(dropTarget);
+
+        // Reattach drag-and-drop listeners to preserve grid functionality
+        dropTarget.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('colId', dropTarget.id);
+          dropTarget.classList.add('dragging');
+        });
+
+        dropTarget.addEventListener('dragend', () => {
+          dropTarget.classList.remove('dragging');
+          normalizeRowFlex(dropTarget.parentNode);
+        });
+
+        dropTarget.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          const draggedCol = document.querySelector('.grid-col.dragging');
+          if (draggedCol && draggedCol !== dropTarget) {
+            if (draggedCol.parentNode === dropTarget.parentNode) {
+              const rect = dropTarget.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              if (x < rect.width / 2) {
+                dropTarget.parentNode.insertBefore(draggedCol, dropTarget);
+              } else {
+                dropTarget.parentNode.insertBefore(draggedCol, dropTarget.nextSibling);
+              }
+            }
+          }
+        });
+      } else {
+        alert('Only fields or fieldsets can be dropped into a column.');
+        return;
       }
+
+      // Normalize flex values after a successful drop
+      normalizeRowFlex(dropTarget.parentNode);
+    }
+
+    function createColumn(className = '', flexValue = 1) {
+      const col = document.createElement('div');
+      col.className = `grid-col ${className}`;
+      col.style.border = '2px dashed gray';
+      col.style.minHeight = '40px';
+      col.style.flex = flexValue.toString();
+      col.dataset.flex = flexValue.toString();
+      col.id = `col-${Date.now()}`;
+      col.draggable = true;
+
+      // Add placeholder text
+      const placeholder = document.createElement('div');
+      placeholder.className = 'column-placeholder';
+      placeholder.textContent = 'Control or Fieldset';
+      placeholder.style.textAlign = 'center';
+      placeholder.style.color = '#999';
+      placeholder.style.fontSize = '14px';
+      placeholder.style.pointerEvents = 'none';
+      placeholder.style.marginTop = '-9px';
+      col.appendChild(placeholder);
+
+      const iconsContainer = document.createElement('div');
+      iconsContainer.className = 'column-icons';
+      iconsContainer.innerHTML = `
+    <div class="left-icons">
+      <i class="fas fa-arrows-alt drag-handle" style="font-size: 20px; color: #00aaff; cursor: move;"></i>
+      <i class="fas fa-cog" style="font-size: 20px; color: #00aaff;"></i>
+    </div>
+    <div class="center-icons">
+      <i class="fas fa-less-than" style="font-size: 20px; color: #00aaff;cursor: pointer;"></i>
+      <i class="fas fa-greater-than" style="font-size: 20px; color: #00aaff;cursor: pointer"></i>
+    </div>
+    <div class="right-icons">
+      <i class="fas fa-trash delete-column" style="font-size: 20px; color: red; cursor: pointer;"></i>
+    </div>
+  `;
+      col.appendChild(iconsContainer);
+
+      col.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('colId', col.id);
+        col.classList.add('dragging');
+      });
+
+      col.addEventListener('dragend', () => {
+        col.classList.remove('dragging');
+        normalizeRowFlex(col.parentNode);
+      });
+
+      col.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const draggedCol = document.querySelector('.grid-col.dragging');
+        if (draggedCol && draggedCol !== col) {
+          if (draggedCol.parentNode === col.parentNode) {
+            const rect = col.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            if (x < rect.width / 2) {
+              col.parentNode.insertBefore(draggedCol, col);
+            } else {
+              col.parentNode.insertBefore(draggedCol, col.nextSibling);
+            }
+          }
+        }
+      });
+
+      col.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent event from bubbling up to parent dropzones
+        const type = e.dataTransfer.getData('type');
+        // Only allow fields and fieldsets to be dropped
+        if (type === 'field' || type === 'fieldset') {
+          handleDrop(e, col);
+        } else {
+          alert('Only fields or fieldsets can be dropped into a column.');
+        }
+      });
+
+      return col;
+    }
+
+    // Helper function to transform a grid-col into a container
+    function transformGridColToContainer(gridCol) {
+      // Clear the existing content of the grid-col
+      gridCol.innerHTML = '';
+
+      // Apply styles to match the container in the image
+      gridCol.classList.remove('grid-col'); // Remove grid-col class to avoid conflicting styles
+      gridCol.classList.add('fieldset-container'); // Add fieldset-container class
+      gridCol.style.border = '2px solid rgba(7, 197, 255, 0.8)';
+      gridCol.style.borderRadius = '4px';
+      gridCol.style.width = '100%';
+      gridCol.style.boxSizing = 'border-box';
+      gridCol.style.marginTop = '0px';
+      gridCol.style.position = 'relative';
+      gridCol.style.minHeight = 'auto';
+      gridCol.style.overflowX = 'auto';
+      gridCol.style.scrollbarWidth = 'thin';
+      gridCol.style.flex = gridCol.dataset.flex;
+      gridCol.style.flexDirection = 'column';
+      gridCol.draggable = true; // Make the entire fieldset-container draggable
+
+      // Create a wrapper for the name and icons
+      const nameWrapper = document.createElement('div');
+      nameWrapper.className = 'fieldset-name-wrapper';
+      nameWrapper.style.position = 'absolute';
+      nameWrapper.style.top = '0px';
+      nameWrapper.style.left = '35px';
+      nameWrapper.style.display = 'flex';
+      nameWrapper.style.alignItems = 'center';
+      nameWrapper.style.gap = '5px';
+
+      // Create left icons container (for Move icon)
+      const leftIcons = document.createElement('div');
+      leftIcons.className = 'fieldset-icons left-icons';
+      leftIcons.style.display = 'none'; // Hidden by default
+
+      // Create Move icon
+      const moveIcon = document.createElement('i');
+      moveIcon.className = 'fas fa-arrows-alt move-fieldset';
+      moveIcon.style.fontSize = '14px';
+      moveIcon.style.color = '#00aaff';
+      moveIcon.style.cursor = 'move';
+      leftIcons.appendChild(moveIcon);
+
+      // Create an editable name for the fieldset-container
+      const fieldsetName = document.createElement('span');
+      fieldsetName.className = 'fieldset-name';
+      fieldsetName.contentEditable = true;
+      fieldsetName.textContent = 'Fieldset'; // Default name
+      fieldsetName.style.backgroundColor = '#f4f7fc';
+      fieldsetName.style.padding = '2px 5px';
+      fieldsetName.style.fontSize = '14px';
+      fieldsetName.style.color = '#333';
+      fieldsetName.style.cursor = 'text';
+
+      // Add focus and blur styling for better UX
+      fieldsetName.addEventListener('focus', () => {
+        fieldsetName.style.backgroundColor = '#fff';
+        fieldsetName.style.border = '1px solid rgba(7, 197, 255, 0.8)';
+        fieldsetName.style.borderRadius = '4px';
+      });
+
+      fieldsetName.addEventListener('blur', () => {
+        fieldsetName.style.backgroundColor = '#f4f7fc';
+        fieldsetName.style.border = 'none';
+      });
+
+      // Create right icons container (for Delete icon)
+      const rightIcons = document.createElement('div');
+      rightIcons.className = 'fieldset-icons right-icons';
+      rightIcons.style.display = 'none'; // Hidden by default
+
+      // Create Delete icon
+      const deleteIcon = document.createElement('i');
+      deleteIcon.className = 'fas fa-trash delete-fieldset';
+      deleteIcon.style.fontSize = '14px';
+      deleteIcon.style.color = 'red';
+      deleteIcon.style.cursor = 'pointer';
+      rightIcons.appendChild(deleteIcon);
+
+      // Append icons and name to the wrapper
+      nameWrapper.appendChild(leftIcons);
+      nameWrapper.appendChild(fieldsetName);
+      nameWrapper.appendChild(rightIcons);
+
+      // Show icons on hover over the name wrapper
+      nameWrapper.addEventListener('mouseenter', () => {
+        leftIcons.style.display = 'flex';
+        rightIcons.style.display = 'flex';
+      });
+
+      nameWrapper.addEventListener('mouseleave', () => {
+        if (document.activeElement !== fieldsetName) {
+          leftIcons.style.display = 'none';
+          rightIcons.style.display = 'none';
+        }
+      });
+
+      // Ensure icons remain visible if the name is focused
+      fieldsetName.addEventListener('focus', () => {
+        leftIcons.style.display = 'flex';
+        rightIcons.style.display = 'flex';
+      });
+
+      fieldsetName.addEventListener('blur', () => {
+        if (!nameWrapper.matches(':hover')) {
+          leftIcons.style.display = 'none';
+          rightIcons.style.display = 'none';
+        }
+      });
+
+      // Handle delete functionality
+      deleteIcon.addEventListener('click', () => {
+        const parentRow = gridCol.parentNode;
+        const layout = parentRow.dataset.layout;
+        const colFlex = parseFloat(gridCol.dataset.flex || gridCol.style.flex || '0');
+
+        // Remove the fieldset-container
+        gridCol.remove();
+
+        // Create or update the Add Column button
+        let addButton = parentRow.querySelector('.add-column-button');
+        if (addButton) {
+          const currentAddButtonFlex = parseFloat(addButton.dataset.flex || addButton.style.flex || '0');
+          const newAddButtonFlex = currentAddButtonFlex + colFlex;
+          addButton.style.flex = newAddButtonFlex.toString();
+          addButton.dataset.flex = newAddButtonFlex.toString();
+        } else {
+          addButton = createAddColumnButton(colFlex, layout);
+          parentRow.appendChild(addButton);
+        }
+
+        // If no columns remain, create a new row with the Add Column button
+        if (!parentRow.querySelector('.fieldset-container') && !parentRow.querySelector('.grid-col')) {
+          const container = parentRow.parentNode;
+          const newRow = document.createElement('div');
+          newRow.className = 'grid-row';
+          newRow.style.height = '40px';
+          newRow.dataset.layout = layout;
+          newRow.appendChild(addButton);
+          container.appendChild(newRow);
+          parentRow.remove();
+        }
+      });
+
+      // Handle drag-and-drop for moving the fieldset-container
+      gridCol.addEventListener('dragstart', (e) => {
+        if (e.target.classList.contains('move-fieldset')) {
+          e.dataTransfer.setData('colId', gridCol.id);
+          gridCol.classList.add('dragging');
+        } else {
+          e.preventDefault();
+        }
+      });
+
+      gridCol.addEventListener('dragend', () => {
+        gridCol.classList.remove('dragging');
+        normalizeRowFlex(gridCol.parentNode);
+      });
+
+      gridCol.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const draggedCol = document.querySelector('.fieldset-container.dragging');
+        if (draggedCol && draggedCol !== gridCol) {
+          if (draggedCol.parentNode === gridCol.parentNode) {
+            const rect = gridCol.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            if (x < rect.width / 2) {
+              gridCol.parentNode.insertBefore(draggedCol, gridCol);
+            } else {
+              gridCol.parentNode.insertBefore(draggedCol, gridCol.nextSibling);
+            }
+          }
+        }
+      });
+
+      // Create a "Drop a Row" placeholder
+      const rowPlaceholder = document.createElement('div');
+      rowPlaceholder.className = 'row-placeholder';
+      rowPlaceholder.textContent = 'Drop a Row';
+      rowPlaceholder.style.border = '3px dashed rgba(7, 197, 255, 0.8)';
+      rowPlaceholder.style.backgroundColor = '#f4f7fc';
+      rowPlaceholder.style.padding = '10px';
+      rowPlaceholder.style.textAlign = 'center';
+      rowPlaceholder.style.color = '#666';
+      rowPlaceholder.style.marginBottom = '10px';
+
+      // Add drag-and-drop listeners to the placeholder
+      rowPlaceholder.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        rowPlaceholder.classList.add('active');
+      });
+
+      rowPlaceholder.addEventListener('dragleave', () => {
+        rowPlaceholder.classList.remove('active');
+      });
+
+      rowPlaceholder.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        rowPlaceholder.classList.remove('active');
+
+        const type = e.dataTransfer.getData('type');
+        const layout = e.dataTransfer.getData('layout');
+
+        if (type === 'layout' && layout) {
+          createGridLayout(layout, gridCol);
+          gridCol.appendChild(rowPlaceholder);
+        } else {
+          alert('Please drop a valid row layout.');
+        }
+      });
+
+      // Append the name wrapper and placeholder to the container
+      gridCol.appendChild(nameWrapper);
+      gridCol.appendChild(rowPlaceholder);
+
+      // Normalize the parent row's flex values
+      normalizeRowFlex(gridCol.parentNode);
     }
 
     function addFieldToGrid(target, fieldType, fieldLabel) {
@@ -1209,7 +1541,7 @@
     }
 
     function normalizeRowFlex(row) {
-      const columns = row.querySelectorAll('.grid-col');
+      const columns = row.querySelectorAll('.grid-col,.fieldset-container');
       const addButton = row.querySelector('.add-column-button');
 
       let totalFlex = 0;
@@ -1250,71 +1582,6 @@
       console.log('Total flex after normalization:', totalAfter);
     }
 
-    function createColumn(className = '', flexValue = 1) {
-      const col = document.createElement('div');
-      col.className = `grid-col ${className}`;
-      col.style.border = '2px dashed gray';
-      col.style.minHeight = '40px';
-      col.style.flex = flexValue.toString();
-      col.dataset.flex = flexValue.toString();
-      col.id = `col-${Date.now()}`;
-      col.draggable = true;
-
-      const iconsContainer = document.createElement('div');
-      iconsContainer.className = 'column-icons';
-      iconsContainer.innerHTML = `
-    <div class="left-icons">
-      <i class="fas fa-arrows-alt drag-handle" style="font-size: 20px; color: #00aaff; cursor: move;"></i>
-      <i class="fas fa-cog" style="font-size: 20px; color: #00aaff;"></i>
-    </div>
-    <div class="center-icons">
-      <i class="fas fa-less-than" style="font-size: 20px; color: #00aaff;cursor: pointer;"></i>
-      <i class="fas fa-greater-than" style="font-size: 20px; color: #00aaff;cursor: pointer"></i>
-    </div>
-    <div class="right-icons">
-      <i class="fas fa-trash delete-column" style="font-size: 20px; color: red; cursor: pointer;"></i>
-    </div>
-  `;
-
-      col.appendChild(iconsContainer);
-
-      col.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('colId', col.id);
-        col.classList.add('dragging');
-      });
-
-      col.addEventListener('dragend', () => {
-        col.classList.remove('dragging');
-        normalizeRowFlex(col.parentNode);
-      });
-
-      col.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        const draggedCol = document.querySelector('.grid-col.dragging');
-        if (draggedCol && draggedCol !== col) {
-          if (draggedCol.parentNode === col.parentNode) {
-            const rect = col.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            if (x < rect.width / 2) {
-              col.parentNode.insertBefore(draggedCol, col);
-            } else {
-              col.parentNode.insertBefore(draggedCol, col.nextSibling);
-            }
-          }
-        }
-      });
-
-      col.addEventListener('drop', (e) => {
-        e.preventDefault();
-        handleDrop(e, col);
-        normalizeRowFlex(col.parentNode);
-      });
-
-      return col;
-    }
-
-
-    // grid layout
     function createGridLayout(layout, target) {
       const container = document.createElement('div');
       container.className = 'grid-container';
@@ -1325,53 +1592,60 @@
       switch (layout) {
         case '1-row':
           row.appendChild(createColumn('col-1', 12));
-          row.style.height = '40px';
+          row.style.minHeight = '40px';
+          row.style.maxHeight = 'auto';
           break;
         case '2-equal':
           row.appendChild(createColumn('', 6));
           row.appendChild(createColumn('', 6));
-          row.style.height = '40px';
+          row.style.minHeight = '40px';
+          row.style.maxHeight = 'auto';
           break;
         case '3-equal':
           row.appendChild(createColumn('', 4));
           row.appendChild(createColumn('', 4));
           row.appendChild(createColumn('', 4));
-          row.style.height = '40px';
+          row.style.minHeight = '40px';
+          row.style.maxHeight = 'auto';
           break;
         case '4-equal':
           row.appendChild(createColumn('', 3));
           row.appendChild(createColumn('', 3));
           row.appendChild(createColumn('', 3));
           row.appendChild(createColumn('', 3));
-          row.style.height = '40px';
+          row.style.minHeight = '40px';
+          row.style.maxHeight = 'auto';
           break;
         case '1-2-split':
           row.appendChild(createColumn('', 4));
           row.appendChild(createColumn('col-2', 8));
-          row.style.height = '40px';
+          row.style.minHeight = '40px';
+          row.style.maxHeight = 'auto';
           break;
         case '2-1-split':
           row.appendChild(createColumn('col-2', 8));
           row.appendChild(createColumn('', 4));
-          row.style.height = '40px';
+          row.style.minHeight = '40px';
+          row.style.maxHeight = 'auto';
           break;
         case '5-equal':
           for (let i = 0; i < 5; i++) {
             row.appendChild(createColumn('', 2.4));
           }
-          row.style.height = '40px';
+          row.style.minHeight = '40px';
+          row.style.maxHeight = 'auto';
           break;
         case '2-8-2-split':
           row.appendChild(createColumn('', 2));
           row.appendChild(createColumn('', 8));
           row.appendChild(createColumn('', 2));
-          row.style.height = '40px';
+          row.style.minHeight = '40px';
+          row.style.maxHeight = 'auto';
           break;
       }
       container.appendChild(row);
-      target.appendChild(container);
+      target.appendChild(container); // Ensure the grid is appended to the correct target
     }
-
 
     // make grid to input 
     function replaceFieldInGrid(target, fieldType, fieldLabel) {
@@ -1386,29 +1660,31 @@
       target.style.flexDirection = 'column'; // Stack label and input vertically
       target.style.alignItems = 'stretch'; // Stretch to full width
 
+      // Store the fieldId in the grid column's dataset
+      target.dataset.fieldId = `field-${fieldType}`; // Store the fieldId (e.g., 'field-firstname')
+
       // Recreate the column icons to ensure they persist
       const iconsContainer = document.createElement('div');
       iconsContainer.className = 'column-icons';
       iconsContainer.style.zIndex = '30'; // Higher z-index than the input
       iconsContainer.innerHTML = `
-    <div class="left-icons">
-      <i class="fas fa-arrows-alt drag-handle" style="font-size: 20px; color: #00aaff; cursor: move;"></i>
-      <i class="fas fa-cog setting-input" style="font-size: 20px; color: #00aaff;cursor: pointer"></i>
-    </div>
-    <div class="center-icons">
-      <i class="fas fa-less-than" style="font-size: 20px; color: #00aaff; cursor: pointer;"></i>
-      <i class="fas fa-greater-than" style="font-size: 20px; color: #00aaff; cursor: pointer"></i>
-    </div>
-    <div class="right-icons">
-      <i class="fas fa-trash delete-column" style="font-size: 20px; color: red; cursor: pointer;"></i>
-    </div>
-  `;
+        <div class="left-icons">
+            <i class="fas fa-arrows-alt drag-handle" style="font-size: 20px; color: #00aaff; cursor: move;"></i>
+            <i class="fas fa-cog setting-input" style="font-size: 20px; color: #00aaff;cursor: pointer"></i>
+        </div>
+        <div class="center-icons">
+            <i class="fas fa-less-than" style="font-size: 20px; color: #00aaff; cursor: pointer;"></i>
+            <i class="fas fa-greater-than" style="font-size: 20px; color: #00aaff; cursor: pointer"></i>
+        </div>
+        <div class="right-icons">
+            <i class="fas fa-trash delete-column" style="font-size: 20px; color: red; cursor: pointer;"></i>
+        </div>
+    `;
       target.appendChild(iconsContainer);
 
       // Create the input field
       const input = document.createElement('input');
       input.type = fieldType === 'email' ? 'email' : 'text';
-      // Use a dummy placeholder to trigger the :not(:placeholder-shown) selector
       input.placeholder = ' '; // Space ensures the placeholder-shown logic works
       input.style.width = '100%';
       input.style.padding = '10px 0 5px 0'; // Adjusted padding
@@ -1581,7 +1857,6 @@
       };
     }
 
-
     // shrink and stretching colum 
     document.addEventListener('click', (e) => {
       const lessThanIcon = e.target.closest('.fa-less-than');
@@ -1694,10 +1969,20 @@
       const deleteIcon = e.target.closest('.delete-column');
       if (deleteIcon) {
         console.log('Delete icon clicked');
-        const col = deleteIcon.closest('.grid-col');
+        const col = deleteIcon.closest('.grid-col, .fieldset-container'); // Handle both grid-col and fieldset-container
         if (col) {
           const parentRow = col.parentNode;
           const layout = parentRow.dataset.layout;
+
+          // Re-enable the field button if the column contains a field
+          const fieldId = col.dataset.fieldId;
+          if (fieldId) {
+            const fieldButton = document.getElementById(fieldId);
+            if (fieldButton) {
+              fieldButton.classList.remove('disabled');
+              console.log(`Re-enabled field button: ${fieldId}`);
+            }
+          }
 
           const colFlex = parseFloat(col.dataset.flex || col.style.flex || '0');
           col.remove();
@@ -1713,7 +1998,8 @@
             parentRow.appendChild(addButton);
           }
 
-          if (!parentRow.querySelector('.grid-col')) {
+          // If no columns remain, create a new row with the Add Column button
+          if (!parentRow.querySelector('.grid-col') && !parentRow.querySelector('.fieldset-container')) {
             const container = parentRow.parentNode;
             const newRow = document.createElement('div');
             newRow.className = 'grid-row';
@@ -1725,7 +2011,7 @@
           }
 
           let totalGridUnits = 0;
-          const columns = parentRow.querySelectorAll('.grid-col');
+          const columns = parentRow.querySelectorAll('.grid-col, .fieldset-container');
           columns.forEach(c => {
             totalGridUnits += parseFloat(c.dataset.flex || c.style.flex || '0');
           });
@@ -1735,7 +2021,7 @@
           }
           console.log('Total grid units after delete:', totalGridUnits);
         } else {
-          console.error('Column not found');
+          console.error('Column or fieldset not found');
         }
       }
 
@@ -1757,7 +2043,6 @@
           console.error('Grid column not found');
         }
       }
-
     });
 
     function createAddColumnButton(flexValue, layout) {
